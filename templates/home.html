@@ -5,10 +5,28 @@
 </head>
 <body>
 <h1>Test Firebase Database</h1>
+
+<!-- Form to Add Data to Firebase -->
 <form method="POST">
     {% csrf_token %}
     <input type="text" name="test_data" placeholder="Enter test data" required>
     <button type="submit">Submit</button>
 </form>
+
+<!-- Button to Fetch and Display Data from Firebase -->
+<form method="GET" action="/display-data/">
+    <button type="submit">Display All Data</button>
+</form>
+
+<!-- Display Data Section -->
+{% if data %}
+    <h2>Data from Firebase:</h2>
+    <ul>
+        {% for item in data %}
+            <li>{{ item }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
 </body>
 </html>

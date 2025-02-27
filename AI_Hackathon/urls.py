@@ -20,10 +20,11 @@ from django.urls import path
 from django.contrib import admin
 from django.urls import path, include
 
-from finance_app.views import home
+from finance_app.views import home, display_data
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('finance_app.urls')),  # Add this line
     path('', home, name='home'),
+    path('display-data/', display_data, name='display_data'),
 ]
