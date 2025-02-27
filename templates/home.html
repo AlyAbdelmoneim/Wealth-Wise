@@ -1,32 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Firebase Test Page</title>
+    <title>Home Page - FinSavvy</title>
 </head>
 <body>
-<h1>Test Firebase Database</h1>
-
-<!-- Form to Add Data to Firebase -->
+<h1>Test Data Management</h1>
 <form method="POST">
     {% csrf_token %}
     <input type="text" name="test_data" placeholder="Enter test data" required>
-    <button type="submit">Submit</button>
+    <button type="submit">Submit Test Data</button>
 </form>
 
-<!-- Button to Fetch and Display Data from Firebase -->
+<h2>Display All Data</h2>
 <form method="GET" action="/display-data/">
     <button type="submit">Display All Data</button>
 </form>
 
-<!-- Display Data Section -->
 {% if data %}
-    <h2>Data from Firebase:</h2>
+    <h3>Data from Firebase:</h3>
     <ul>
         {% for item in data %}
             <li>{{ item }}</li>
         {% endfor %}
     </ul>
 {% endif %}
-
 </body>
 </html>
