@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Test Page</title>
+</head>
+<body>
+<h1>Test Firebase Database</h1>
+<form method="POST">
+    {% csrf_token %}
+    <input type="text" name="test_data" placeholder="Enter test data" required>
+    <button type="submit">Submit</button>
+</form>
+</body>
+</html>
