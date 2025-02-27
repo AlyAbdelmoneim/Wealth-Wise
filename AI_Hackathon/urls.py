@@ -19,12 +19,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from AI_Hackathon.views import home, display_data
+from AI_Hackathon.views import HomeView, AddUserView, FinancialDataView, DisplayDataView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    path('', home, name='home'),
-    path('display-data/', display_data, name='display_data'),
+    path('', HomeView.as_view(), name='home'),
+    path('add-user/', AddUserView.as_view(), name='add_user'),
+    path('api/financial-data/', FinancialDataView.as_view(), name='financial_data'),
+    path('display-data/', DisplayDataView.as_view(), name='display_data'),
 
 ]
