@@ -17,7 +17,7 @@ Including another URLconf
 # from django.contrib import admin
 # AI_Hackathon/urls.py
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 from AI_Hackathon.views import home, display_data
 
@@ -26,5 +26,9 @@ urlpatterns = [
 
     path('', home, name='home'),
     path('display-data/', display_data, name='display_data'),
+
+    path('ml/', include('ml_model.urls')),
+
+    path("api/", include("llm_chatbot.urls")),
 
 ]
