@@ -24,7 +24,7 @@
 /* Content overlay */
 .content-overlay {
     position: relative;
-    width: 100%;
+    width: 150%;
     max-width: 900px;
     padding: 30px 20px;
     background-color: rgba(44, 44, 44, 0.85);
@@ -42,10 +42,11 @@ h2 {
 }
 
 .section-container {
-    width: 100%;
+    width: 90%;
     margin-bottom: 30px;
     padding-bottom: 20px;
     border-bottom: 1px solid rgba(209, 167, 111, 0.3);
+    margin-left:15px;
 }
 
 .section-title {

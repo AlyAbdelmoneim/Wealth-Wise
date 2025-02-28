@@ -5,30 +5,40 @@ import "./UpdateData.css";
 const UpdateData = () => {
     const navigate = useNavigate();
 
-    // State for handling input values
-    const [jobDescription, setJobDescription] = useState("");
-    const [monthlySalary, setMonthlySalary] = useState("");
-    const [yearlyBonus, setYearlyBonus] = useState("");
+    // State for handling fixed income
+    const [fixedIncome, setFixedIncome] = useState({
+        jobDescription: "",
+        monthlySalary: "",
+        yearlyBonus: "",
+    });
 
-    // States for Variable Salary
-    const [variableAmount, setVariableAmount] = useState("");
-    const [variableDescription, setVariableDescription] = useState("");
-    const [customerNumber, setCustomerNumber] = useState("");
+    // State for handling variable salary
+    const [variableIncome, setVariableIncome] = useState({
+        amount: "",
+        description: "",
+        customerNumber: "",
+    });
 
-    // States for Luxury Expenses
-    const [luxuryDescription, setLuxuryDescription] = useState("");
-    const [luxuryAmount, setLuxuryAmount] = useState("");
-    const [luxuryFrequency, setLuxuryFrequency] = useState("monthly");
+    // State for handling expenses
+    const [expenses, setExpenses] = useState({
+        luxury: { description: "", amount: "", frequency: "monthly" },
+        living: { description: "", amount: "", frequency: "monthly" },
+        work: { description: "", amount: "", frequency: "monthly" },
+    });
 
-    // New states for Living Expenses
-    const [livingDescription, setLivingDescription] = useState("");
-    const [livingAmount, setLivingAmount] = useState("");
-    const [livingFrequency, setLivingFrequency] = useState("monthly");
-
-    // New states for Work Expenses
-    const [workDescription, setWorkDescription] = useState("");
-    const [workAmount, setWorkAmount] = useState("");
-    const [workFrequency, setWorkFrequency] = useState("monthly");
+    // Generic handler for input changes
+    const handleInputChange = (section, field, value) => {
+        if (section === "fixedIncome") {
+            setFixedIncome((prev) => ({ ...prev, [field]: value }));
+        } else if (section === "variableIncome") {
+            setVariableIncome((prev) => ({ ...prev, [field]: value }));
+        } else {
+            setExpenses((prev) => ({
+                ...prev,
+                [section]: { ...prev[section], [field]: value },
+            }));
+        }
+    };
 
     return (
         <div className="update-data-container">
@@ -39,180 +49,89 @@ const UpdateData = () => {
             </video>
 
             <div className="content-overlay">
-                {/* Header */}
-                <h2>Monthly Reminder of Expenses / Yearly</h2>
+                <h2>Monthly & Yearly Financial Data</h2>
 
                 {/* Fixed Salary Section */}
                 <div className="section-container">
                     <div className="section-title">Fixed Salary</div>
-                    <div className="input-container">
-                        <label>Job Description</label>
-                        <textarea
-                            value={jobDescription}
-                            onChange={(e) => setJobDescription(e.target.value)}
-                            placeholder="Enter your job description..."
-                        />
-
-                        <label>Monthly Salary</label>
-                        <textarea
-                            value={monthlySalary}
-                            onChange={(e) => setMonthlySalary(e.target.value)}
-                            placeholder="Enter your monthly salary..."
-                        />
-
-                        <label>Yearly Bonus</label>
-                        <textarea
-                            value={yearlyBonus}
-                            onChange={(e) => setYearlyBonus(e.target.value)}
-                            placeholder="Enter your yearly bonus..."
-                        />
-                    </div>
+                    <label>Job Description</label>
+                    <textarea
+                        value={fixedIncome.jobDescription}
+                        onChange={(e) => handleInputChange("fixedIncome", "jobDescription", e.target.value)}
+                        placeholder="Enter job description..."
+                    />
+                    <label>Monthly Salary</label>
+                    <input
+                        type="text"
+                        value={fixedIncome.monthlySalary}
+                        onChange={(e) => handleInputChange("fixedIncome", "monthlySalary", e.target.value)}
+                        placeholder="Enter monthly salary..."
+                    />
+                    <label>Yearly Bonus</label>
+                    <input
+                        type="text"
+                        value={fixedIncome.yearlyBonus}
+                        onChange={(e) => handleInputChange("fixedIncome", "yearlyBonus", e.target.value)}
+                        placeholder="Enter yearly bonus..."
+                    />
                 </div>
 
                 {/* Variable Salary Section */}
                 <div className="section-container">
                     <div className="section-title">Variable Salary</div>
-                    <div className="horizontal-inputs">
-                        <div className="input-field">
-                            <label>Amount</label>
-                            <input
-                                type="text"
-                                value={variableAmount}
-                                onChange={(e) => setVariableAmount(e.target.value)}
-                                placeholder="Amount"
-                            />
-                        </div>
-                        <div className="input-field">
-                            <label>Description</label>
-                            <input
-                                type="text"
-                                value={variableDescription}
-                                onChange={(e) => setVariableDescription(e.target.value)}
-                                placeholder="Description"
-                            />
-                        </div>
-                        <div className="input-field">
-                            <label>Customer Number</label>
-                            <input
-                                type="text"
-                                value={customerNumber}
-                                onChange={(e) => setCustomerNumber(e.target.value)}
-                                placeholder="Customer #"
-                            />
-                        </div>
-                    </div>
+                    <label>Amount</label>
+                    <input
+                        type="text"
+                        value={variableIncome.amount}
+                        onChange={(e) => handleInputChange("variableIncome", "amount", e.target.value)}
+                        placeholder="Enter amount..."
+                    />
+                    <label>Description</label>
+                    <input
+                        type="text"
+                        value={variableIncome.description}
+                        onChange={(e) => handleInputChange("variableIncome", "description", e.target.value)}
+                        placeholder="Enter description..."
+                    />
+                    <label>Customer Number</label>
+                    <input
+                        type="text"
+                        value={variableIncome.customerNumber}
+                        onChange={(e) => handleInputChange("variableIncome", "customerNumber", e.target.value)}
+                        placeholder="Enter customer number..."
+                    />
                 </div>
 
-                {/* Luxury Expenses Section */}
-                <div className="section-container">
-                    <div className="section-title">Luxury Expenses</div>
-                    <div className="horizontal-inputs">
-                        <div className="input-field">
-                            <label>Description</label>
-                            <input
-                                type="text"
-                                value={luxuryDescription}
-                                onChange={(e) => setLuxuryDescription(e.target.value)}
-                                placeholder="Description"
-                            />
-                        </div>
-                        <div className="input-field">
-                            <label>Amount</label>
-                            <input
-                                type="text"
-                                value={luxuryAmount}
-                                onChange={(e) => setLuxuryAmount(e.target.value)}
-                                placeholder="Amount"
-                            />
-                        </div>
-                        <div className="input-field">
-                            <label>Frequency</label>
-                            <select
-                                value={luxuryFrequency}
-                                onChange={(e) => setLuxuryFrequency(e.target.value)}
-                                className="frequency-select"
-                            >
-                                <option value="yearly">Yearly</option>
-                                <option value="monthly">Monthly</option>
-                                <option value="daily">Daily</option>
-                            </select>
-                        </div>
+                {/* Expenses Sections (Luxury, Living, Work) */}
+                {["luxury", "living", "work"].map((expenseType) => (
+                    <div key={expenseType} className="section-container">
+                        <div className="section-title">{expenseType.charAt(0).toUpperCase() + expenseType.slice(1)} Expenses</div>
+                        <label>Description</label>
+                        <input
+                            type="text"
+                            value={expenses[expenseType].description}
+                            onChange={(e) => handleInputChange(expenseType, "description", e.target.value)}
+                            placeholder="Enter description..."
+                        />
+                        <label>Amount</label>
+                        <input
+                            type="text"
+                            value={expenses[expenseType].amount}
+                            onChange={(e) => handleInputChange(expenseType, "amount", e.target.value)}
+                            placeholder="Enter amount..."
+                        />
+                        <label>Frequency</label>
+                        <select
+                            value={expenses[expenseType].frequency}
+                            onChange={(e) => handleInputChange(expenseType, "frequency", e.target.value)}
+                            className="frequency-select"
+                        >
+                            <option value="yearly">Yearly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="daily">Daily</option>
+                        </select>
                     </div>
-                </div>
-
-                {/* Living Expenses Section */}
-                <div className="section-container">
-                    <div className="section-title">Living Expenses</div>
-                    <div className="horizontal-inputs">
-                        <div className="input-field">
-                            <label>Description</label>
-                            <input
-                                type="text"
-                                value={livingDescription}
-                                onChange={(e) => setLivingDescription(e.target.value)}
-                                placeholder="Description"
-                            />
-                        </div>
-                        <div className="input-field">
-                            <label>Amount</label>
-                            <input
-                                type="text"
-                                value={livingAmount}
-                                onChange={(e) => setLivingAmount(e.target.value)}
-                                placeholder="Amount"
-                            />
-                        </div>
-                        <div className="input-field">
-                            <label>Frequency</label>
-                            <select
-                                value={livingFrequency}
-                                onChange={(e) => setLivingFrequency(e.target.value)}
-                                className="frequency-select"
-                            >
-                                <option value="yearly">Yearly</option>
-                                <option value="monthly">Monthly</option>
-                                <option value="daily">Daily</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Work Expenses Section */}
-                <div className="section-container">
-                    <div className="section-title">Work Expenses</div>
-                    <div className="horizontal-inputs">
-                        <div className="input-field">
-                            <label>Description</label>
-                            <input
-                                type="text"
-                                value={workDescription}
-                                onChange={(e) => setWorkDescription(e.target.value)}
-                                placeholder="Description"
-                            />
-                        </div>
-                        <div className="input-field">
-                            <label>Amount</label>
-                            <input
-                                type="text"
-                                value={workAmount}
-                                onChange={(e) => setWorkAmount(e.target.value)}
-                                placeholder="Amount"
-                            />
-                        </div>
-                        <div className="input-field">
-                            <label>Frequency</label>
-                            <select
-                                value={workFrequency}
-                                onChange={(e) => setWorkFrequency(e.target.value)}
-                                className="frequency-select"
-                            >
-                                <option value="yearly">Yearly</option>
-                                <option value="monthly">Monthly</option>
-                                <option value="daily">Daily</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+                ))}
 
                 {/* Done Button */}
                 <button className="done-btn" onClick={() => navigate("/chatbot")}>
@@ -224,4 +143,3 @@ const UpdateData = () => {
 };
 
 export default UpdateData;
-

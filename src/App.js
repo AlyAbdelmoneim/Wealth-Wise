@@ -7,6 +7,8 @@ import Login from "./pages/Login";
 import TutorialQuestions from "./pages/TutorialQuestions";
 import Chatbot from "./pages/Chatbot";
 import UpdateData from "./pages/UpdateData";
+import Analytics from "./pages/Analytics";
+import AddMembers from "./pages/AddMembers";
 
 const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -14,11 +16,7 @@ const App = () => {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setIsAuthenticated(true);
-            } else {
-                setIsAuthenticated(false);
-            }
+            setIsAuthenticated(!!user);
             setLoading(false);
         });
 
@@ -36,6 +34,8 @@ const App = () => {
                 <Route path="/tutorial" element={isAuthenticated ? <TutorialQuestions /> : <Navigate to="/login" />} />
                 <Route path="/chatbot" element={isAuthenticated ? <Chatbot /> : <Navigate to="/login" />} />
                 <Route path="/update-data" element={isAuthenticated ? <UpdateData /> : <Navigate to="/login" />} />
+                <Route path="/analytics" element={isAuthenticated ? <Analytics /> : <Navigate to="/login" />} />
+                <Route path="/add-members" element={isAuthenticated ? <AddMembers /> : <Navigate to="/login" />} /> 
                 <Route path="*" element={<Navigate to="/" />} />
             </Routes>
         </Router>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "./Chatbot.css";
 import SettingsPopup from "./SettingsPopup";
 import { getAuth } from "firebase/auth";
-import { useNavigate } from "react-router-dom"; // ✅ Import useNavigate
+import { useNavigate } from "react-router-dom";
 
 const Chatbot = () => {
     const [chats, setChats] = useState({});
@@ -13,7 +13,7 @@ const Chatbot = () => {
     const [currentUser, setCurrentUser] = useState(null);
     const chatEndRef = useRef(null);
 
-    const navigate = useNavigate(); // ✅ Initialize the navigate function
+    const navigate = useNavigate();
 
     useEffect(() => {
         const auth = getAuth();
@@ -104,9 +104,11 @@ const Chatbot = () => {
 
             <div className="sidebar">
                 <button className="sidebar-btn" onClick={startNewChat}>+ New Chat</button>
-                <button className="sidebar-btn">📊 Analytics</button>
+                <button className="sidebar-btn" onClick={() => navigate("/analytics")}>📊 Analytics</button>
                 <button className="sidebar-btn" onClick={() => setIsSettingsOpen(true)}>⚙ Settings</button>
                 <button className="sidebar-btn" onClick={() => navigate("/update-data")}>Update Data</button>
+                <button className="sidebar-btn" onClick={() => navigate("/add-members")}>Add members to Acc</button>
+
                 <div className="chat-list">
                     {Object.keys(chats).map(chatId => (
                         <div key={chatId} className={`chat-item ${chatId === currentChatId ? "active" : ""}`} onClick={() => setCurrentChatId(chatId)}>
