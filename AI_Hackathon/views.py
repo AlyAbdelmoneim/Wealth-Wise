@@ -574,11 +574,17 @@ class FinancialOperationsView(View):
         try:
             today = datetime.utcnow()
             one_month_ago = today - timedelta(days=30)
+            one_year_ago = today - timedelta(days=365)
 
             income_data = {}
+            expense_data = {}
+            yearly_income_data = {}
+            yearly_expense_data = {}
             profit_data = {}
             cash_flow_data = {}
             tax_data = {}
+            time_series_graph = None
+            expense_time_series_graph = None
 
             # Income Calculation
             if action == 'calculate_income':
@@ -609,6 +615,156 @@ class FinancialOperationsView(View):
                     'variable_income_last_month': variable_income_last_month,
                     'month_income': total_income_one_month
                 }
+
+            # 📈 Average Monthly Income Calculation
+            elif action == 'calculate_average_income':
+                fixed_income_ref = db.collection('fixed_income').where('user_email', '==', user_email)
+                fixed_income_docs = fixed_income_ref.stream()
+                monthly_fixed_salary = sum(
+                    [doc.to_dict().get('monthly_salary', 0.0) for doc in fixed_income_docs])
+
+                variable_income_ref = db.collection('variable_income').where('user_email', '==', user_email)
+                variable_income_docs = variable_income_ref.stream()
+
+                variable_income_year = 0.0
+
+                for doc in variable_income_docs:
+                    data = doc.to_dict()
+                    amount = data.get('amount', 0.0)
+                    transaction_date_str = data.get('created_at', None)
+
+                    if transaction_date_str:
+                        transaction_date = datetime.fromisoformat(transaction_date_str)
+
+                        if transaction_date >= one_year_ago:
+                            variable_income_year += amount
+
+                total_income_one_year = (monthly_fixed_salary * 12) + variable_income_year
+
+                # Calculate Average Monthly Income
+                average_monthly_income = total_income_one_year / 12
+
+                income_data = {
+                    'average_monthly_income': average_monthly_income
+                }
+
+            # 💸 Average Monthly Expenses Calculation
+            elif action == 'calculate_average_expenses':
+                expense_collections = ['work_expenses', 'living_expenses', 'luxury_expenses']
+                total_yearly_expenses = 0.0
+
+                for collection in expense_collections:
+                    expense_ref = db.collection(collection).where('user_email', '==', user_email)
+                    expense_docs = expense_ref.stream()
+
+                    for doc in expense_docs:
+                        data = doc.to_dict()
+                        amount = data.get('amount', 0.0)
+                        transaction_date_str = data.get('transaction_date', None)
+
+                        if transaction_date_str:
+                            transaction_date = datetime.fromisoformat(transaction_date_str)
+
+                            if transaction_date >= one_year_ago:
+                                total_yearly_expenses += amount
+
+                # Calculate Average Monthly Expenses
+                average_monthly_expenses = total_yearly_expenses / 12
+
+                expense_data = {
+                    'average_monthly_expenses': average_monthly_expenses
+                }
+
+            # 📅 Total Income Per Year Calculation with Time Series Graph
+            elif action == 'calculate_total_income_per_year':
+                fixed_income_ref = db.collection('fixed_income').where('user_email', '==', user_email)
+                fixed_income_docs = fixed_income_ref.stream()
+                monthly_fixed_salary = sum(
+                    [doc.to_dict().get('monthly_salary', 0.0) for doc in fixed_income_docs])
+
+                variable_income_ref = db.collection('variable_income').where('user_email', '==', user_email)
+                variable_income_docs = variable_income_ref.stream()
+
+                yearly_income = defaultdict(float)
+
+                for doc in variable_income_docs:
+                    data = doc.to_dict()
+                    amount = data.get('amount', 0.0)
+                    transaction_date_str = data.get('created_at', None)
+
+                    if transaction_date_str:
+                        transaction_date = datetime.fromisoformat(transaction_date_str)
+                        year = transaction_date.year
+                        yearly_income[year] += amount
+
+                # Add fixed income for each year
+                current_year = datetime.now().year
+                if yearly_income:
+                    for year in range(min(yearly_income.keys()), current_year + 1):
+                        yearly_income[year] += monthly_fixed_salary * 12
+
+                yearly_income_data = dict(yearly_income)
+
+                # 📈 Generate Time Series Graph for Income
+                years = list(yearly_income_data.keys())
+                income_values = list(yearly_income_data.values())
+
+                plt.figure(figsize=(8, 6))
+                plt.plot(years, income_values, marker='o', linestyle='-', color='b')
+                plt.title('Total Income Per Year')
+                plt.xlabel('Year')
+                plt.ylabel('Income')
+                plt.grid(True)
+
+                buffer = io.BytesIO()
+                plt.savefig(buffer, format='png')
+                buffer.seek(0)
+                image_png = buffer.getvalue()
+                buffer.close()
+
+                time_series_graph = urllib.parse.quote(base64.b64encode(image_png).decode())
+                plt.close()
+
+            # 📅 Total Expenses Per Year Calculation with Time Series Graph
+            elif action == 'calculate_total_expenses_per_year':
+                expense_collections = ['work_expenses', 'living_expenses', 'luxury_expenses']
+                yearly_expenses = defaultdict(float)
+
+                for collection in expense_collections:
+                    expense_ref = db.collection(collection).where('user_email', '==', user_email)
+                    expense_docs = expense_ref.stream()
+
+                    for doc in expense_docs:
+                        data = doc.to_dict()
+                        amount = data.get('amount', 0.0)
+                        transaction_date_str = data.get('transaction_date', None)
+
+                        if transaction_date_str:
+                            transaction_date = datetime.fromisoformat(transaction_date_str)
+                            year = transaction_date.year
+                            yearly_expenses[year] += amount
+
+                yearly_expense_data = dict(yearly_expenses)
+
+                # 📈 Generate Time Series Graph for Expenses
+                years = list(yearly_expense_data.keys())
+                expense_values = list(yearly_expense_data.values())
+
+                plt.figure(figsize=(8, 6))
+                plt.plot(years, expense_values, marker='o', linestyle='-', color='r')
+                plt.title('Total Expenses Per Year')
+                plt.xlabel('Year')
+                plt.ylabel('Expenses')
+                plt.grid(True)
+
+                buffer = io.BytesIO()
+                plt.savefig(buffer, format='png')
+                buffer.seek(0)
+                image_png = buffer.getvalue()
+                buffer.close()
+
+                expense_time_series_graph = urllib.parse.quote(base64.b64encode(image_png).decode())
+                plt.close()
 
             # Profit and Loss Calculation
             elif action == 'calculate_profit_loss':
@@ -725,14 +881,20 @@ class FinancialOperationsView(View):
 
             return render(request, 'financial_operations.html', {
                 'income_data': income_data,
+                'expense_data': expense_data,
+                'yearly_income_data': yearly_income_data,
+                'yearly_expense_data': yearly_expense_data,
                 'profit_data': profit_data,
                 'cash_flow_data': cash_flow_data,
                 'tax_data': tax_data,
-                'user_email': user_email
+                'user_email': user_email,
+                'time_series_graph': time_series_graph,
+                'expense_time_series_graph': expense_time_series_graph
             })
 
         except Exception as e:
             print(f"Error processing financial operations: {e}")
+            print(traceback.format_exc())
             return HttpResponse('Failed to process financial operations.', status=500)
 
 

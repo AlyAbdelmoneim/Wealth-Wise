@@ -1,11 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth import logout
-from django.urls import path
+from django.urls import path, include
 from .views import (
     HomeView, AddUserView, AddTransactionView, FinancialDataView, DisplayDataView,
     AddEmployeeView, LinkUsersView, AddFixedIncomeView, AddVariableIncomeView,
     AddWorkExpenseView, AddLuxuryExpenseView, AddLivingExpenseView, FinancialOperationsView,
-    LinkedDataView, ChatbotAPI, get_financial_data
+    LinkedDataView, ChatbotAPI, get_financial_data, chat_with_palm
 )
 
 urlpatterns = [
@@ -27,4 +27,10 @@ urlpatterns = [
     path('financial-operations/', FinancialOperationsView.as_view(), name='financial_operations'),
     path('logout/', logout, name='logout'),
     path('chatbot-api/', ChatbotAPI.as_view(), name='chatbot_api'),
+    # Commented paths from the second file
+    # path("api/", include("llm_chatbot.urls")),
+    # path('ml/', include('ml_model.urls')),
+    # path("chat/", " chat_with_palm"),
+    # path("api/", include("llm_chatbot.urls")),
+    # path('ml/', include('ml_model.urls')),
 ]
