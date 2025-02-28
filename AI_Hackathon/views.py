@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from firebase_admin import firestore
+from datetime import datetime
 
 db = firestore.client()
 
@@ -101,3 +102,74 @@ class DisplayDataView(View):
         docs = users_ref.stream()
         data = [doc.to_dict().get('data') for doc in docs]
         return render(request, 'home.html', {'data': data})
+# Class-based view to manage employee information linked to user email
+class AddEmployeeView(View):
+    def get(self, request):
+        return render(request, 'add_employee.html')
+
+    def post(self, request):
+        user_email = request.POST.get('user_email')  # Email of the user who owns the employee data
+        employee_name = request.POST.get('employee_name')
+        job_description = request.POST.get('job_description')
+        salary = request.POST.get('salary')
+        linked_user_email = request.POST.get('linked_user_email')  # Optional email to link two users
+
+        if user_email and employee_name and salary:
+            try:
+                employee_id = f"{user_email}_{employee_name}"
+
+                employee_data = {
+                    'user_email': user_email,  # Linking to the user who owns the data
+                    'employee_name': employee_name,
+                    'job_description': job_description,
+                    'salary': float(salary) if salary else 0.0,
+                    'linked_user_email': linked_user_email,  # Optional linked user
+                    'created_at': datetime.utcnow().isoformat()  # Auto-created date
+                }
+
+                db.collection('employees').document(employee_id).set(employee_data)
+                return HttpResponse('Employee added successfully!')
+
+            except Exception as e:
+                print(f"Error saving to Firebase: {e}")
+                return HttpResponse('Failed to save employee data to Firebase')
+
+        return render(request, 'add_employee.html')
+class LinkedDataView(View):
+        def get(self, request):
+            user_email = request.GET.get('user_email')  # Main user email
+            linked_user_email = request.GET.get('linked_user_email')  # Linked user email
+
+            if not user_email:
+                return HttpResponse('User email is required!', status=400)
+
+            try:
+                combined_data = {
+                    'users': [],
+                    'employees': [],
+                    'transactions': []
+                }
+
+                # Fetch User Data
+                for email in [user_email, linked_user_email]:
+                    if email:
+                        user_doc = db.collection('users').document(email).get()
+                        if user_doc.exists:
+                            user_data = user_doc.to_dict()
+                            combined_data['users'].append(user_data)
+
+                # Fetch Employee Data
+                employees_ref = db.collection('employees').where('user_email', 'in', [user_email, linked_user_email])
+                employee_docs = employees_ref.stream()
+                combined_data['employees'] = [doc.to_dict() for doc in employee_docs]
+
+                # Fetch Financial Transactions
+                transactions_ref = db.collection('transactions').where('user_email', 'in', [user_email, linked_user_email])
+                transaction_docs = transactions_ref.stream()
+                combined_data['transactions'] = [doc.to_dict() for doc in transaction_docs]
+
+                return render(request, 'linked_data.html', {'data': combined_data})
+
+            except Exception as e:
+                print(f"Error fetching linked data: {e}")
+                return HttpResponse('Failed to fetch linked data.', status=500)

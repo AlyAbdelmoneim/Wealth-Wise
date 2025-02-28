@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Combined Data for Linked Users - FinSavvy</title>
+</head>
+<body>
+<h1>Combined Analytics for Linked Users</h1>
+
+<!-- User Information -->
+<h2>Users:</h2>
+{% for user in data.users %}
+    <h3>{{ user.name }} ({{ user.email }})</h3>
+    <p>Country: {{ user.country }}</p>
+    <p>Position: {{ user.position }}</p>
+    <p>Risk Tolerance: {{ user.risk_taker }}</p>
+    <p>Net Worth: {{ user.networth }}</p>
+    <hr>
+{% empty %}
+    <p>No user data available.</p>
+{% endfor %}
+
+<!-- Employee Information -->
+<h2>Employees:</h2>
+{% for employee in data.employees %}
+    <h3>{{ employee.employee_name }}</h3>
+    <p>Job Description: {{ employee.job_description }}</p>
+    <p>Salary: ${{ employee.salary }}</p>
+    <p>Linked to User: {{ employee.user_email }}</p>
+    <hr>
+{% empty %}
+    <p>No employee data available.</p>
+{% endfor %}
+
+<!-- Financial Transactions -->
+<h2>Financial Transactions:</h2>
+{% for transaction in data.transactions %}
+    <h3>{{ transaction.description }}</h3>
+    <p>Amount: ${{ transaction.amount }}</p>
+    <p>Type: {{ transaction.type }}</p>
+    <p>Associated User: {{ transaction.user_email }}</p>
+    <p>Date: {{ transaction.created_at }}</p>
+    <hr>
+{% empty %}
+    <p>No transactions available.</p>
+{% endfor %}
+</body>
+</html>
