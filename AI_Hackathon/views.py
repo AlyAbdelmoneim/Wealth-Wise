@@ -16,7 +16,7 @@ from django.utils.decorators import method_decorator
 from firebase_admin import firestore
 import requests
 import json
-
+from datetime import datetime, timedelta
 
 db = firestore.client()
 
@@ -115,10 +115,99 @@ class AddTransactionView(View):
 # Class-based view to fetch financial data as JSON
 class FinancialDataView(View):
     def get(self, request):
-        users_ref = db.collection('testCollection')
-        docs = users_ref.stream()
-        data = {doc.id: doc.to_dict() for doc in docs}
-        return JsonResponse(data)
+        user_email = request.GET.get('user_email')  # Get user_email from query parameters
+
+        if not user_email:
+            return JsonResponse({"error": "user_email is required"}, status=400)
+
+        try:
+            # Fetch annual income
+            def get_annual_income(user_email):
+                fixed_income_ref = db.collection("fixed_income").where("user_email", "==", user_email)
+                fixed_income_docs = fixed_income_ref.stream()
+
+                monthly_salary_total = 0
+                yearly_bonus_total = 0
+
+                for doc in fixed_income_docs:
+                    data = doc.to_dict()
+                    monthly_salary_total += data.get("monthly_salary", 0)
+                    yearly_bonus_total += data.get("yearly_bonus", 0)
+
+                one_year_ago = datetime.now() - timedelta(days=365)
+                variable_income_ref = db.collection("variable_income").where("user_email", "==", user_email)
+                variable_income_docs = variable_income_ref.stream()
+
+                variable_income_total = 0
+                for doc in variable_income_docs:
+                    data = doc.to_dict()
+                    created_at = data.get("created_at")
+
+                    if created_at:
+                        created_at_dt = datetime.fromisoformat(created_at)
+                        if created_at_dt >= one_year_ago:
+                            variable_income_total += data.get("amount", 0)
+
+                annual_income = (monthly_salary_total * 12) + yearly_bonus_total + variable_income_total
+                return int(annual_income)
+
+            # Fetch yearly transactions
+            def get_yearly_transactions(user_email):
+                one_year_ago = datetime.now() - timedelta(days=365)
+
+                transactions_ref = db.collection("transactions").where("user_email", "==", user_email)
+                docs = transactions_ref.stream()
+
+                total_amount = 0
+                for doc in docs:
+                    data = doc.to_dict()
+                    created_at = data.get("created_at")
+
+                    if created_at:
+                        created_at_dt = datetime.fromisoformat(created_at)
+                        if created_at_dt >= one_year_ago:
+                            total_amount += data.get("amount", 0)
+
+                return int(total_amount)
+
+            # Fetch yearly expenses by category
+            def get_yearly_expenses_by_category(user_email):
+                one_year_ago = datetime.now() - timedelta(days=365)
+
+                categories = ['work_expenses', 'luxury_expenses', 'living_expenses']
+                expenses = {category: 0 for category in categories}
+
+                for category in categories:
+                    expenses_ref = db.collection(category).where("user_email", "==", user_email)
+                    docs = expenses_ref.stream()
+
+                    for doc in docs:
+                        data = doc.to_dict()
+                        created_at = data.get("transaction_date")
+
+                        if created_at:
+                            created_at_dt = datetime.fromisoformat(created_at)
+                            if created_at_dt >= one_year_ago:
+                                expenses[category] += data.get("amount", 0)
+
+                expenses['total_expenses'] = sum(expenses.values())
+                return expenses
+
+            # Generate JSON data
+            annual_income = get_annual_income(user_email)
+            yearly_transactions = get_yearly_transactions(user_email)
+            expenses = get_yearly_expenses_by_category(user_email)
+
+            data = {
+                "annual_income": annual_income,
+                "yearly_transactions": yearly_transactions,
+                "expenses": expenses
+            }
+
+            return JsonResponse(data, safe=False)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
 
 
 # Class-based view to display data on the frontend
