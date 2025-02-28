@@ -6,9 +6,10 @@ const Chatbot = () => {
     const [currentChatId, setCurrentChatId] = useState(null);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const [userEmail, setUserEmail] = useState("");
+
     const chatEndRef = useRef(null);
 
-    // Load saved chats from localStorage
     useEffect(() => {
         const savedChats = JSON.parse(localStorage.getItem("chats")) || {};
         setChats(savedChats);
@@ -17,7 +18,6 @@ const Chatbot = () => {
         }
     }, []);
 
-    // Scroll to the bottom of chat when messages update
     useEffect(() => {
         if (currentChatId) {
             chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -26,28 +26,30 @@ const Chatbot = () => {
 
     const handleSend = () => {
         if (!input.trim()) return;
-
-        const userMessage = { sender: "user", text: input };
-        const botMessage = { sender: "bot", text: "Let me think..." };
-
-        setChats(prev => {
-            const updatedChats = { ...prev };
-            if (!updatedChats[currentChatId]) updatedChats[currentChatId] = [];
-            updatedChats[currentChatId] = [...updatedChats[currentChatId], userMessage];
-
-            setTimeout(() => {
-                updatedChats[currentChatId] = [...updatedChats[currentChatId], botMessage];
-                setChats({ ...updatedChats });
-                setIsTyping(false);
-                localStorage.setItem("chats", JSON.stringify(updatedChats));
-            }, 1500);
-
-            return updatedChats;
-        });
-
+    
+        fetch("http://localhost:8000/chatbot-api/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                user_email: "kareem.elfeel@gmail.com", // Replace with actual user email
+                message: input,
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                const botMessage = { sender: "bot", text: data.response || "No response from API" };
+                setChats(prev => ({
+                    ...prev,
+                    [currentChatId]: [...(prev[currentChatId] || []), botMessage]
+                }));
+            })
+            .catch((error) => console.error("Error:", error));
+    
         setInput("");
-        setIsTyping(true);
     };
+    
 
     const startNewChat = () => {
         const newChatId = Date.now().toString();
@@ -59,7 +61,6 @@ const Chatbot = () => {
 
     return (
         <div className="chat-container">
-            {/* Sidebar for multiple chats */}
             <div className="sidebar">
                 <button className="new-chat-btn" onClick={startNewChat}>+ New Chat</button>
                 <div className="chat-list">
@@ -71,24 +72,41 @@ const Chatbot = () => {
                 </div>
             </div>
 
-            {/* Chat interface */}
             <div className="chatbot">
                 <div className="chat-header">AI Financial Assistant</div>
-                <div className="chat-history">
-                    {currentChatId && chats[currentChatId]?.map((msg, index) => (
-                        <div key={index} className={`message ${msg.sender}`}>
-                            <div className="bubble">{msg.text}</div>
+                {!userEmail ? (
+                    <div className="email-input">
+                        <input
+                            type="email"
+                            placeholder="Enter your email"
+                            value={userEmail}
+                            onChange={(e) => setUserEmail(e.target.value)}
+                        />
+                        <button onClick={() => setUserEmail(userEmail.trim())}>Set Email</button>
+                    </div>
+                ) : (
+                    <>
+                        <div className="chat-history">
+                            {currentChatId && chats[currentChatId]?.map((msg, index) => (
+                                <div key={index} className={`message ${msg.sender}`}>
+                                    <div className="bubble">{msg.text}</div>
+                                </div>
+                            ))}
+                            {isTyping && <div className="message bot"><div className="bubble typing">...</div></div>}
+                            <div ref={chatEndRef} />
                         </div>
-                    ))}
-                    {isTyping && <div className="message bot"><div className="bubble typing">...</div></div>}
-                    <div ref={chatEndRef} />
-                </div>
 
-                {/* Input field */}
-                <div className="chat-input">
-                    <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Message AI..." />
-                    <button onClick={handleSend} className="send-btn">➤</button>
-                </div>
+                        <div className="chat-input">
+                            <input
+                                type="text"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                placeholder="Message AI..."
+                            />
+                            <button onClick={handleSend} className="send-btn">➤</button>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );

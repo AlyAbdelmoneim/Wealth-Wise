@@ -1,35 +1,36 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "../firebase"; // Firebase config
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import { auth, provider } from "../firebase"; // Firebase config
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import "./Login.css";
 
 const Login = () => {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState("");
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        const storedUser = JSON.parse(localStorage.getItem("currentUser"));
-
-        if (storedUser && storedUser.email === email) {
-            localStorage.setItem("isAuthenticated", "true");
-            navigate("/chatbot");
-        } else {
-            alert("Invalid credentials! Please try again.");
+    const handleLogin = async () => {
+        if (!email || !password) {
+            setError("Please fill in all fields.");
+            return;
+        }
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            navigate("/dashboard");
+        } catch (error) {
+            console.error("Login Error:", error);
+            setError("Invalid email or password. Please try again.");
         }
     };
 
     const handleGoogleSignIn = async () => {
         try {
-            const result = await signInWithPopup(auth, provider);
-            const user = result.user;
-            localStorage.setItem("currentUser", JSON.stringify({ name: user.displayName, email: user.email }));
-            localStorage.setItem("isAuthenticated", "true");
-            navigate("/chatbot");
+            await signInWithPopup(auth, provider);
+            navigate("/dashboard");
         } catch (error) {
             console.error("Google Sign-In Error:", error);
         }
@@ -37,19 +38,27 @@ const Login = () => {
 
     return (
         <div className="login-page">
-            <video autoPlay loop muted className="video-background">
-                <source src="/neutral.mp4" type="video/mp4" />
-            </video>
-
             <div className="login-container">
                 <h2>Login</h2>
-                <form onSubmit={handleSubmit}>
-                    <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                    <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                    <button className="login-btn" type="submit">Login</button>
-                </form>
+                {error && <p className="error-message">{error}</p>}
+                <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                
+                <div className="password-container">
+                    <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                    <span className="eye-icon" onClick={() => setShowPassword(!showPassword)}>
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </span>
+                </div>
 
-                <div className="google-login" onClick={handleGoogleSignIn}>
+                <button className="login-button" onClick={handleLogin}>Login</button>
+
+                <div className="google-signin" onClick={handleGoogleSignIn}>
                     <FcGoogle className="google-icon" />
                     <span>Sign in with Google</span>
                 </div>
