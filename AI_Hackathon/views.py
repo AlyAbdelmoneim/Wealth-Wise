@@ -491,8 +491,6 @@ class FinancialOperationsView(View):
         try:
             today = datetime.utcnow()
             one_month_ago = today - timedelta(days=30)
-            three_months_ago = today - timedelta(days=90)
-            one_year_ago = today - timedelta(days=365)
 
             income_data = {}
             profit_data = {}
@@ -503,14 +501,12 @@ class FinancialOperationsView(View):
             if action == 'calculate_income':
                 fixed_income_ref = db.collection('fixed_income').where('user_email', '==', user_email)
                 fixed_income_docs = fixed_income_ref.stream()
-                monthly_fixed_income = sum([doc.to_dict().get('monthly_salary', 0.0) for doc in fixed_income_docs])
+                monthly_fixed_salary = sum([doc.to_dict().get('monthly_salary', 0.0) for doc in fixed_income_docs])
 
                 variable_income_ref = db.collection('variable_income').where('user_email', '==', user_email)
                 variable_income_docs = variable_income_ref.stream()
 
-                variable_income_year = 0.0
-                variable_income_three_months = 0.0
-                variable_income_one_month = 0.0
+                variable_income_last_month = 0.0
 
                 for doc in variable_income_docs:
                     data = doc.to_dict()
@@ -520,20 +516,14 @@ class FinancialOperationsView(View):
                     if transaction_date_str:
                         transaction_date = datetime.fromisoformat(transaction_date_str)
 
-                        if transaction_date >= one_year_ago:
-                            variable_income_year += amount
-                        if transaction_date >= three_months_ago:
-                            variable_income_three_months += amount
                         if transaction_date >= one_month_ago:
-                            variable_income_one_month += amount
+                            variable_income_last_month += amount
 
-                total_income_year = (monthly_fixed_income * 12) + variable_income_year
-                total_income_three_months = (monthly_fixed_income * 3) + variable_income_three_months
-                total_income_one_month = monthly_fixed_income + variable_income_one_month
+                total_income_one_month = monthly_fixed_salary + variable_income_last_month
 
                 income_data = {
-                    'year_income': total_income_year,
-                    'three_months_income': total_income_three_months,
+                    'monthly_fixed_salary': monthly_fixed_salary,
+                    'variable_income_last_month': variable_income_last_month,
                     'month_income': total_income_one_month
                 }
 
@@ -541,7 +531,7 @@ class FinancialOperationsView(View):
             elif action == 'calculate_profit_loss':
                 fixed_income_ref = db.collection('fixed_income').where('user_email', '==', user_email)
                 fixed_income_docs = fixed_income_ref.stream()
-                monthly_fixed_income = sum([doc.to_dict().get('monthly_salary', 0.0) for doc in fixed_income_docs])
+                monthly_fixed_salary = sum([doc.to_dict().get('monthly_salary', 0.0) for doc in fixed_income_docs])
 
                 variable_income_ref = db.collection('variable_income').where('user_email', '==', user_email)
                 variable_income_docs = variable_income_ref.stream()
@@ -575,10 +565,10 @@ class FinancialOperationsView(View):
                         if transaction_date >= one_month_ago:
                             work_expense_last_month += amount
 
-                profit_and_loss = (monthly_fixed_income + variable_income_last_month) - work_expense_last_month
+                profit_and_loss = (monthly_fixed_salary + variable_income_last_month) - work_expense_last_month
 
                 profit_data = {
-                    'monthly_income': monthly_fixed_income,
+                    'monthly_income': monthly_fixed_salary,
                     'variable_income_last_month': variable_income_last_month,
                     'work_expense_last_month': work_expense_last_month,
                     'profit_and_loss': profit_and_loss
@@ -601,9 +591,27 @@ class FinancialOperationsView(View):
 
             # 🧮 Taxation Calculation
             elif action == 'calculate_taxation':
-                monthly_salary = income_data.get('month_income', 0.0)
-                variable_income = profit_data.get('variable_income_last_month', 0.0)
-                total_income = monthly_salary + variable_income
+                fixed_income_ref = db.collection('fixed_income').where('user_email', '==', user_email)
+                fixed_income_docs = fixed_income_ref.stream()
+                monthly_fixed_salary = sum([doc.to_dict().get('monthly_salary', 0.0) for doc in fixed_income_docs])
+
+                variable_income_ref = db.collection('variable_income').where('user_email', '==', user_email)
+                variable_income_docs = variable_income_ref.stream()
+
+                variable_income_last_month = 0.0
+
+                for doc in variable_income_docs:
+                    data = doc.to_dict()
+                    amount = data.get('amount', 0.0)
+                    transaction_date_str = data.get('created_at', None)
+
+                    if transaction_date_str:
+                        transaction_date = datetime.fromisoformat(transaction_date_str)
+
+                        if transaction_date >= one_month_ago:
+                            variable_income_last_month += amount
+
+                total_income = monthly_fixed_salary + variable_income_last_month
 
                 tax_rate = 0.0
                 if total_income > 1200000:
@@ -620,8 +628,8 @@ class FinancialOperationsView(View):
                     tax_rate = 10
 
                 tax_data = {
-                    'monthly_salary': monthly_salary,
-                    'variable_income': variable_income,
+                    'monthly_fixed_salary': monthly_fixed_salary,
+                    'variable_income_last_month': variable_income_last_month,
                     'total_income': total_income,
                     'tax_rate': tax_rate
                 }
