@@ -15,11 +15,13 @@ db = firestore.client()
 genai.configure(api_key="AIzaSyBZFbmzifh7zWSiXZsznz4_YhUoOv8QNFY")
 model = genai.GenerativeModel("gemini-1.5-pro-latest")
 
+
 @api_view(["POST"])
 def chat_with_palm(request):
     user_message = request.data.get("message", "")
     response = model.generate_content(user_message)
     return JsonResponse({"response": response.text})
+
 
 # Class-based view for the home page and test data management
 class HomeView(View):
@@ -32,6 +34,7 @@ class HomeView(View):
             db.collection('testCollection').add({'data': test_data})
             return HttpResponse('Data saved to Firebase: ' + test_data)
         return render(request, 'home.html')
+
 
 # Class-based view to manage user creation using email as the document ID
 class AddUserView(View):
@@ -70,6 +73,7 @@ class AddUserView(View):
 
         return render(request, 'add_user.html')
 
+
 # Class-based view to add financial transactions using email as the user reference
 class AddTransactionView(View):
     def get(self, request):
@@ -101,6 +105,7 @@ class AddTransactionView(View):
 
         return render(request, 'add_transaction.html')
 
+
 # Class-based view to fetch financial data as JSON
 class FinancialDataView(View):
     def get(self, request):
@@ -109,6 +114,7 @@ class FinancialDataView(View):
         data = {doc.id: doc.to_dict() for doc in docs}
         return JsonResponse(data)
 
+
 # Class-based view to display data on the frontend
 class DisplayDataView(View):
     def get(self, request):
@@ -116,6 +122,8 @@ class DisplayDataView(View):
         docs = users_ref.stream()
         data = [doc.to_dict().get('data') for doc in docs]
         return render(request, 'home.html', {'data': data})
+
+
 # Class-based view to manage employee information linked to user email
 class AddEmployeeView(View):
     def get(self, request):
@@ -149,44 +157,47 @@ class AddEmployeeView(View):
                 return HttpResponse('Failed to save employee data to Firebase')
 
         return render(request, 'add_employee.html')
+
+
 class LinkedDataView(View):
-        def get(self, request):
-            user_email = request.GET.get('user_email')  # Main user email
-            linked_user_email = request.GET.get('linked_user_email')  # Linked user email
+    def get(self, request):
+        user_email = request.GET.get('user_email')  # Main user email
+        linked_user_email = request.GET.get('linked_user_email')  # Linked user email
 
-            if not user_email:
-                return HttpResponse('User email is required!', status=400)
+        if not user_email:
+            return HttpResponse('User email is required!', status=400)
 
-            try:
-                combined_data = {
-                    'users': [],
-                    'employees': [],
-                    'transactions': []
-                }
+        try:
+            combined_data = {
+                'users': [],
+                'employees': [],
+                'transactions': []
+            }
 
-                # Fetch User Data
-                for email in [user_email, linked_user_email]:
-                    if email:
-                        user_doc = db.collection('users').document(email).get()
-                        if user_doc.exists:
-                            user_data = user_doc.to_dict()
-                            combined_data['users'].append(user_data)
+            # Fetch User Data
+            for email in [user_email, linked_user_email]:
+                if email:
+                    user_doc = db.collection('users').document(email).get()
+                    if user_doc.exists:
+                        user_data = user_doc.to_dict()
+                        combined_data['users'].append(user_data)
 
-                # Fetch Employee Data
-                employees_ref = db.collection('employees').where('user_email', 'in', [user_email, linked_user_email])
-                employee_docs = employees_ref.stream()
-                combined_data['employees'] = [doc.to_dict() for doc in employee_docs]
+            # Fetch Employee Data
+            employees_ref = db.collection('employees').where('user_email', 'in', [user_email, linked_user_email])
+            employee_docs = employees_ref.stream()
+            combined_data['employees'] = [doc.to_dict() for doc in employee_docs]
 
-                # Fetch Financial Transactions
-                transactions_ref = db.collection('transactions').where('user_email', 'in', [user_email, linked_user_email])
-                transaction_docs = transactions_ref.stream()
-                combined_data['transactions'] = [doc.to_dict() for doc in transaction_docs]
+            # Fetch Financial Transactions
+            transactions_ref = db.collection('transactions').where('user_email', 'in', [user_email, linked_user_email])
+            transaction_docs = transactions_ref.stream()
+            combined_data['transactions'] = [doc.to_dict() for doc in transaction_docs]
 
-                return render(request, 'linked_data.html', {'data': combined_data})
+            return render(request, 'linked_data.html', {'data': combined_data})
 
-            except Exception as e:
-                print(f"Error fetching linked data: {e}")
-                return HttpResponse('Failed to fetch linked data.', status=500)
+        except Exception as e:
+            print(f"Error fetching linked data: {e}")
+            return HttpResponse('Failed to fetch linked data.', status=500)
+
 
 # Class-based view to create a link between two users
 class LinkUsersView(View):
@@ -243,6 +254,7 @@ class LinkUsersView(View):
 
         return render(request, 'link_users.html')
 
+
 # Function to update combined financials when user data changes
 def update_combined_financials(user_email):
     try:
@@ -273,6 +285,8 @@ def update_combined_financials(user_email):
 
     except Exception as e:
         print(f"Error updating combined financials: {e}")
+
+
 class LinkUsersView(View):
     def get(self, request):
         return render(request, 'link_users.html')
@@ -302,6 +316,8 @@ class LinkUsersView(View):
             except Exception as e:
                 print(f"Error linking users: {e}")
                 return HttpResponse('Failed to link users.', status=500)
+
+
 class AddFixedIncomeView(View):
     def get(self, request):
         return render(request, 'add_fixed_income.html')
@@ -332,6 +348,7 @@ class AddFixedIncomeView(View):
                 return HttpResponse('Failed to save fixed income data.', status=500)
 
         return render(request, 'add_fixed_income.html')
+
 
 # 📂 Class-based view to manage Variable Income
 class AddVariableIncomeView(View):
@@ -365,6 +382,7 @@ class AddVariableIncomeView(View):
 
         return render(request, 'add_variable_income.html')
 
+
 class AddWorkExpenseView(View):
     def get(self, request):
         return render(request, 'add_work_expense.html')
@@ -394,6 +412,7 @@ class AddWorkExpenseView(View):
                 return HttpResponse('Failed to save work expense data.', status=500)
 
         return render(request, 'add_work_expense.html')
+
 
 # 🛍️ Class-based view to manage Luxury Expenses
 class AddLuxuryExpenseView(View):
@@ -426,6 +445,7 @@ class AddLuxuryExpenseView(View):
 
         return render(request, 'add_luxury_expense.html')
 
+
 # 🏠 Class-based view to manage Living Expenses
 class AddLivingExpenseView(View):
     def get(self, request):
@@ -456,6 +476,7 @@ class AddLivingExpenseView(View):
                 return HttpResponse('Failed to save living expense data.', status=500)
 
         return render(request, 'add_living_expense.html')
+
 
 # AI_Hackathon/views.py
 from django.shortcuts import render
@@ -663,3 +684,48 @@ class FinancialOperationsView(View):
         except Exception as e:
             print(f"Error processing financial operations: {e}")
             return HttpResponse('Failed to process financial operations.', status=500)
+
+
+class IncomeGraphView(View):
+    def get(self, request):
+        user_email = request.GET.get('user_email')
+
+        if not user_email:
+            return HttpResponse("User email is required!", status=400)
+
+        try:
+            # Fetch income data from Firestore
+            fixed_income_ref = db.collection('fixed_income').where('user_email', '==', user_email)
+            variable_income_ref = db.collection('variable_income').where('user_email', '==', user_email)
+
+            fixed_income_docs = fixed_income_ref.stream()
+            variable_income_docs = variable_income_ref.stream()
+
+            # Prepare data for the graph
+            fixed_income = sum([doc.to_dict().get('monthly_salary', 0.0) for doc in fixed_income_docs])
+            variable_income = sum([doc.to_dict().get('amount', 0.0) for doc in variable_income_docs])
+
+            # Create a bar chart
+            plt.figure(figsize=(6, 4))
+            categories = ['Fixed Income', 'Variable Income']
+            values = [fixed_income, variable_income]
+
+            plt.bar(categories, values, color=['blue', 'green'])
+            plt.xlabel('Income Type')
+            plt.ylabel('Amount')
+            plt.title('Income Distribution')
+
+            # Save plot to a PNG image in memory
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png')
+            plt.close()
+            buf.seek(0)
+
+            # Encode image to base64
+            image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+
+            return JsonResponse({'image': f'data:image/png;base64,{image_base64}'})
+
+        except Exception as e:
+            print(f"Error generating income graph: {e}")
+            return HttpResponse('Failed to generate income graph.', status=500)
