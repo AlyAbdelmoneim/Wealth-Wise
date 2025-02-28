@@ -9,6 +9,14 @@ from datetime import datetime, timedelta
 from datetime import datetime
 from rest_framework.decorators import api_view
 import google.generativeai as genai
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from firebase_admin import firestore
+import requests
+import json
+
 
 db = firestore.client()
 
@@ -73,7 +81,6 @@ class AddUserView(View):
 
         return render(request, 'add_user.html')
 
-
 # Class-based view to add financial transactions using email as the user reference
 class AddTransactionView(View):
     def get(self, request):
@@ -104,7 +111,6 @@ class AddTransactionView(View):
                 return HttpResponse('Failed to save transaction to Firebase')
 
         return render(request, 'add_transaction.html')
-
 
 # Class-based view to fetch financial data as JSON
 class FinancialDataView(View):
@@ -254,7 +260,6 @@ class LinkUsersView(View):
 
         return render(request, 'link_users.html')
 
-
 # Function to update combined financials when user data changes
 def update_combined_financials(user_email):
     try:
@@ -285,8 +290,6 @@ def update_combined_financials(user_email):
 
     except Exception as e:
         print(f"Error updating combined financials: {e}")
-
-
 class LinkUsersView(View):
     def get(self, request):
         return render(request, 'link_users.html')
@@ -349,7 +352,6 @@ class AddFixedIncomeView(View):
 
         return render(request, 'add_fixed_income.html')
 
-
 # 📂 Class-based view to manage Variable Income
 class AddVariableIncomeView(View):
     def get(self, request):
@@ -381,7 +383,6 @@ class AddVariableIncomeView(View):
                 return HttpResponse('Failed to save variable income data.', status=500)
 
         return render(request, 'add_variable_income.html')
-
 
 class AddWorkExpenseView(View):
     def get(self, request):
@@ -476,7 +477,6 @@ class AddLivingExpenseView(View):
                 return HttpResponse('Failed to save living expense data.', status=500)
 
         return render(request, 'add_living_expense.html')
-
 
 # AI_Hackathon/views.py
 from django.shortcuts import render
@@ -729,3 +729,134 @@ class IncomeGraphView(View):
         except Exception as e:
             print(f"Error generating income graph: {e}")
             return HttpResponse('Failed to generate income graph.', status=500)
+
+
+
+# from django.views.decorators.csrf import csrf_exempt
+#
+# from django.http import JsonResponse, HttpResponseBadRequest
+# from django.views import View
+# from django.views.decorators.csrf import csrf_exempt
+# from django.utils.decorators import method_decorator
+# from firebase_admin import firestore
+# import requests
+# import json
+#
+# db = firestore.client()
+#
+# from django.http import JsonResponse, HttpResponseBadRequest
+# from django.views import View
+# from django.views.decorators.csrf import csrf_exempt
+# from django.utils.decorators import method_decorator
+# from firebase_admin import firestore
+# import requests
+# import json
+#
+# db = firestore.client()
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ChatbotAPI(View):
+
+    def post(self, request):
+        user_email = request.POST.get('user_email')
+        user_message = request.POST.get('message')
+
+        if not user_email or not user_message:
+            return HttpResponseBadRequest("User email and message are required!")
+
+        try:
+            print(f"Received Email: {user_email}")
+            print(f"Received Message: {user_message}")
+
+            # Fetch user data from Firestore
+            user_doc = db.collection('users').document(user_email).get()
+
+            if not user_doc.exists:
+                # Fetch all users from the Firestore 'users' collection
+                users_ref = db.collection('users')
+                docs = users_ref.stream()
+
+                # Collect all users' emails for debugging
+                all_users = [doc.id for doc in docs]
+                print("All Users in Firestore:", all_users)
+
+                return JsonResponse({
+                    'error': 'User not found!',
+                    'available_users': all_users
+                }, status=404)
+
+            user_data = user_doc.to_dict()
+            print(f"Fetched User Data: {user_data}")
+
+            # Create a context-rich prompt including user data
+            context_prompt = f"""
+            User Profile:
+            - Name: {user_data.get('name', 'Unknown')}
+            - Country: {user_data.get('country', 'Unknown')}
+            - Currency: {user_data.get('currency', 'Unknown')}
+            - Savings: {user_data.get('savings', 'Unknown')}
+            - Net Worth: {user_data.get('netWorth', 'Unknown')}
+            - Age: {user_data.get('age', 'Unknown')}
+            - Job: {user_data.get('jobDescription', 'Unknown')} ({user_data.get('position', 'Unknown')})
+            - Risk Tolerance: {user_data.get('riskTolerance', 'Unknown')}
+            - Hobbies: {user_data.get('freeTime', 'Unknown')}
+            - Additional Info: {user_data.get('additionalInfo', 'Unknown')}
+
+            Based on this user profile, please provide a personalized response to:
+            {user_message}
+            """
+
+            # Prepare the payload for Google Generative Language API
+            payload = {
+                "contents": [{
+                    "parts": [{"text": context_prompt}]
+                }]
+            }
+            print("Payload Sent to API:", payload)
+
+            api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyB0CmGwxQLrrtK2XqV6t76E6VS-XxIZImQ"
+
+            headers = {'Content-Type': 'application/json'}
+
+            # Send request to the Google API with a timeout and handle exceptions
+            response = requests.post(api_url, headers=headers, data=json.dumps(payload), timeout=30)
+
+            # Check the full response for debugging
+            print("Full API Response:", response.text)
+
+            if response.status_code == 200:
+                try:
+                    # Ensure the response is parsed as JSON
+                    api_response = response.json()
+                    print("Parsed API Response:", api_response)
+
+                    # Extract the generated text - proper path for Gemini 2.0
+                    if 'candidates' in api_response and len(api_response['candidates']) > 0:
+                        candidate = api_response['candidates'][0]
+                        if 'content' in candidate and 'parts' in candidate['content']:
+                            parts = candidate['content']['parts']
+                            if len(parts) > 0 and 'text' in parts[0]:
+                                generated_text = parts[0]['text']
+                                return JsonResponse({'response': generated_text})
+
+                    # Fallback extraction method
+                    if 'contents' in api_response and len(api_response['contents']) > 0:
+                        content = api_response['contents'][0]
+                        if 'parts' in content and len(content['parts']) > 0:
+                            generated_text = content['parts'][0].get('text', 'No text in response')
+                            return JsonResponse({'response': generated_text})
+
+                    return JsonResponse({'response': 'Could not extract text from API response'})
+
+                except json.JSONDecodeError as e:
+                    print(f"JSON Decode Error: {e}")
+                    return JsonResponse({'error': f'Failed to parse API response: {str(e)}'}, status=500)
+
+            else:
+                print(f"API Request Failed: {response.status_code} - {response.text}")
+                return JsonResponse({'error': f'Failed to get response from API: {response.text}'}, status=500)
+
+        except Exception as e:
+            print(f"Error in ChatbotAPI: {e}")
+            return JsonResponse({'error': f'Internal server error: {str(e)}'}, status=500)
