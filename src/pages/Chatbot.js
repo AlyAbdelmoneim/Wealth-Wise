@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Chatbot.css";
+import SettingsPopup from "./SettingsPopup"; // Linking the settings pop-up
 
 const Chatbot = () => {
     const [chats, setChats] = useState({});
     const [currentChatId, setCurrentChatId] = useState(null);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
-    const [userEmail, setUserEmail] = useState("");
-
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const chatEndRef = useRef(null);
 
     useEffect(() => {
@@ -49,7 +49,7 @@ const Chatbot = () => {
     
         setInput("");
     };
-    
+
 
     const startNewChat = () => {
         const newChatId = Date.now().toString();
@@ -59,14 +59,34 @@ const Chatbot = () => {
         localStorage.setItem("chats", JSON.stringify(newChats));
     };
 
+    const deleteChat = (chatId) => {
+        const updatedChats = { ...chats };
+        delete updatedChats[chatId];
+        setChats(updatedChats);
+        localStorage.setItem("chats", JSON.stringify(updatedChats));
+
+        if (Object.keys(updatedChats).length > 0) {
+            setCurrentChatId(Object.keys(updatedChats)[0]);
+        } else {
+            setCurrentChatId(null);
+        }
+    };
+
     return (
         <div className="chat-container">
+            <video autoPlay loop muted className="fullpage-video">
+                <source src="/neutral.mp4" type="video/mp4" />
+            </video>
+
             <div className="sidebar">
-                <button className="new-chat-btn" onClick={startNewChat}>+ New Chat</button>
+                <button className="sidebar-btn" onClick={startNewChat}>+ New Chat</button>
+                <button className="sidebar-btn">📊 Analytics</button>
+                <button className="sidebar-btn" onClick={() => setIsSettingsOpen(true)}>⚙ Settings</button>
                 <div className="chat-list">
                     {Object.keys(chats).map(chatId => (
                         <div key={chatId} className={`chat-item ${chatId === currentChatId ? "active" : ""}`} onClick={() => setCurrentChatId(chatId)}>
-                            Chat {chatId.slice(-4)}
+                            <span>Chat {chatId.slice(-4)}</span>
+                            <button className="delete-chat-btn" onClick={(e) => { e.stopPropagation(); deleteChat(chatId); }}>✖</button>
                         </div>
                     ))}
                 </div>
@@ -74,40 +94,29 @@ const Chatbot = () => {
 
             <div className="chatbot">
                 <div className="chat-header">AI Financial Assistant</div>
-                {!userEmail ? (
-                    <div className="email-input">
-                        <input
-                            type="email"
-                            placeholder="Enter your email"
-                            value={userEmail}
-                            onChange={(e) => setUserEmail(e.target.value)}
-                        />
-                        <button onClick={() => setUserEmail(userEmail.trim())}>Set Email</button>
-                    </div>
-                ) : (
-                    <>
-                        <div className="chat-history">
-                            {currentChatId && chats[currentChatId]?.map((msg, index) => (
-                                <div key={index} className={`message ${msg.sender}`}>
-                                    <div className="bubble">{msg.text}</div>
-                                </div>
-                            ))}
-                            {isTyping && <div className="message bot"><div className="bubble typing">...</div></div>}
-                            <div ref={chatEndRef} />
+                <div className="chat-history">
+                    {currentChatId && chats[currentChatId]?.map((msg, index) => (
+                        <div key={index} className={`message ${msg.sender}`}>
+                            <div className="bubble">{msg.text}</div>
                         </div>
+                    ))}
+                    {isTyping && <div className="message bot"><div className="bubble typing">...</div></div>}
+                    <div ref={chatEndRef} />
+                </div>
 
-                        <div className="chat-input">
-                            <input
-                                type="text"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="Message AI..."
-                            />
-                            <button onClick={handleSend} className="send-btn">➤</button>
-                        </div>
-                    </>
-                )}
+                <div className="chat-input">
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Message AI..."
+                        onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                    />
+                    <button onClick={handleSend} className="send-btn">➤</button>
+                </div>
             </div>
+
+            {isSettingsOpen && <SettingsPopup onClose={() => setIsSettingsOpen(false)} />}
         </div>
     );
 };
