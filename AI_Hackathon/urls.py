@@ -1,9 +1,10 @@
 # AI_Hackathon/urls.py
 from django.contrib import admin
+from django.contrib.auth import logout
 from django.urls import path, include
 from .views import HomeView, AddUserView, AddTransactionView, FinancialDataView, DisplayDataView, AddEmployeeView, \
     LinkUsersView, AddFixedIncomeView, AddVariableIncomeView, AddWorkExpenseView, AddLuxuryExpenseView, \
-    AddLivingExpenseView
+    AddLivingExpenseView, FinancialOperationsView
 from .views import LinkedDataView
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,5 +25,7 @@ urlpatterns = [
     path('add-work-expense/', AddWorkExpenseView.as_view(), name='add_work_expense'),
     path('add-luxury-expense/', AddLuxuryExpenseView.as_view(), name='add_luxury_expense'),
     path('add-living-expense/', AddLivingExpenseView.as_view(), name='add_living_expense'),
+    path('financial-operations/', FinancialOperationsView.as_view(), name='financial_operations'),
+    path('logout/', logout, name='logout'),
 
 ]

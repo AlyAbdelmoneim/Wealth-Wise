@@ -1,11 +1,11 @@
 # AI_Hackathon/views.py
 import uuid
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from firebase_admin import firestore
-from datetime import datetime
+from datetime import datetime, timedelta
 
 db = firestore.client()
 
@@ -444,3 +444,202 @@ class AddLivingExpenseView(View):
                 return HttpResponse('Failed to save living expense data.', status=500)
 
         return render(request, 'add_living_expense.html')
+
+# AI_Hackathon/views.py
+from django.shortcuts import render
+from django.http import HttpResponse, JsonResponse
+from django.views import View
+from firebase_admin import firestore
+from datetime import datetime, timedelta
+
+db = firestore.client()
+
+# AI_Hackathon/views.py
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.views import View
+from firebase_admin import firestore
+from datetime import datetime, timedelta
+
+db = firestore.client()
+
+# AI_Hackathon/views.py
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.views import View
+from firebase_admin import firestore
+from datetime import datetime, timedelta
+
+db = firestore.client()
+
+
+class FinancialOperationsView(View):
+    def get(self, request):
+        user_email = request.session.get('user_email', None)
+        return render(request, 'financial_operations.html', {'user_email': user_email})
+
+    def post(self, request):
+        user_email = request.session.get('user_email', None) or request.POST.get('user_email')
+        action = request.POST.get('action')
+        apply_tax_deduction = request.POST.get('apply_tax_deduction', 'no') == 'yes'
+
+        if not user_email:
+            return HttpResponse('User email is required!', status=400)
+
+        request.session['user_email'] = user_email
+
+        try:
+            today = datetime.utcnow()
+            one_month_ago = today - timedelta(days=30)
+            three_months_ago = today - timedelta(days=90)
+            one_year_ago = today - timedelta(days=365)
+
+            income_data = {}
+            profit_data = {}
+            cash_flow_data = {}
+            tax_data = {}
+
+            # 📈 Income Calculation
+            if action == 'calculate_income':
+                fixed_income_ref = db.collection('fixed_income').where('user_email', '==', user_email)
+                fixed_income_docs = fixed_income_ref.stream()
+                monthly_fixed_income = sum([doc.to_dict().get('monthly_salary', 0.0) for doc in fixed_income_docs])
+
+                variable_income_ref = db.collection('variable_income').where('user_email', '==', user_email)
+                variable_income_docs = variable_income_ref.stream()
+
+                variable_income_year = 0.0
+                variable_income_three_months = 0.0
+                variable_income_one_month = 0.0
+
+                for doc in variable_income_docs:
+                    data = doc.to_dict()
+                    amount = data.get('amount', 0.0)
+                    transaction_date_str = data.get('created_at', None)
+
+                    if transaction_date_str:
+                        transaction_date = datetime.fromisoformat(transaction_date_str)
+
+                        if transaction_date >= one_year_ago:
+                            variable_income_year += amount
+                        if transaction_date >= three_months_ago:
+                            variable_income_three_months += amount
+                        if transaction_date >= one_month_ago:
+                            variable_income_one_month += amount
+
+                total_income_year = (monthly_fixed_income * 12) + variable_income_year
+                total_income_three_months = (monthly_fixed_income * 3) + variable_income_three_months
+                total_income_one_month = monthly_fixed_income + variable_income_one_month
+
+                income_data = {
+                    'year_income': total_income_year,
+                    'three_months_income': total_income_three_months,
+                    'month_income': total_income_one_month
+                }
+
+            # 💼 Profit and Loss Calculation
+            elif action == 'calculate_profit_loss':
+                fixed_income_ref = db.collection('fixed_income').where('user_email', '==', user_email)
+                fixed_income_docs = fixed_income_ref.stream()
+                monthly_fixed_income = sum([doc.to_dict().get('monthly_salary', 0.0) for doc in fixed_income_docs])
+
+                variable_income_ref = db.collection('variable_income').where('user_email', '==', user_email)
+                variable_income_docs = variable_income_ref.stream()
+
+                variable_income_last_month = 0.0
+
+                for doc in variable_income_docs:
+                    data = doc.to_dict()
+                    amount = data.get('amount', 0.0)
+                    transaction_date_str = data.get('created_at', None)
+
+                    if transaction_date_str:
+                        transaction_date = datetime.fromisoformat(transaction_date_str)
+
+                        if transaction_date >= one_month_ago:
+                            variable_income_last_month += amount
+
+                work_expense_ref = db.collection('work_expenses').where('user_email', '==', user_email)
+                work_expense_docs = work_expense_ref.stream()
+
+                work_expense_last_month = 0.0
+
+                for doc in work_expense_docs:
+                    data = doc.to_dict()
+                    amount = data.get('amount', 0.0)
+                    transaction_date_str = data.get('transaction_date', None)
+
+                    if transaction_date_str:
+                        transaction_date = datetime.fromisoformat(transaction_date_str)
+
+                        if transaction_date >= one_month_ago:
+                            work_expense_last_month += amount
+
+                profit_and_loss = (monthly_fixed_income + variable_income_last_month) - work_expense_last_month
+
+                profit_data = {
+                    'monthly_income': monthly_fixed_income,
+                    'variable_income_last_month': variable_income_last_month,
+                    'work_expense_last_month': work_expense_last_month,
+                    'profit_and_loss': profit_and_loss
+                }
+
+            # 💰 Current Cash Flow
+            elif action == 'calculate_cash_flow':
+                user_doc = db.collection('users').document(user_email).get()
+                if user_doc.exists:
+                    user_data = user_doc.to_dict()
+                    savings = user_data.get('savings', 0.0)
+                    networth = user_data.get('networth', 0.0)
+                    total_cash_flow = savings + networth
+
+                    cash_flow_data = {
+                        'savings': savings,
+                        'networth': networth,
+                        'total_cash_flow': total_cash_flow
+                    }
+
+            # 🧮 Taxation Calculation
+            elif action == 'calculate_taxation':
+                monthly_salary = income_data.get('month_income', 0.0)
+                variable_income = profit_data.get('variable_income_last_month', 0.0)
+                total_income = monthly_salary + variable_income
+
+                tax_rate = 0.0
+                if total_income > 1200000:
+                    tax_rate = 27.5
+                elif total_income > 400000:
+                    tax_rate = 25
+                elif total_income > 200000:
+                    tax_rate = 22.5
+                elif total_income > 70000:
+                    tax_rate = 20
+                elif total_income > 55000:
+                    tax_rate = 15
+                elif total_income > 40000:
+                    tax_rate = 10
+
+                tax_data = {
+                    'monthly_salary': monthly_salary,
+                    'variable_income': variable_income,
+                    'total_income': total_income,
+                    'tax_rate': tax_rate
+                }
+
+                if apply_tax_deduction:
+                    tax_amount = (tax_rate / 100) * total_income
+                    db.collection('users').document(user_email).update({
+                        'networth': firestore.Increment(-tax_amount)
+                    })
+
+            return render(request, 'financial_operations.html', {
+                'income_data': income_data,
+                'profit_data': profit_data,
+                'cash_flow_data': cash_flow_data,
+                'tax_data': tax_data,
+                'user_email': user_email
+            })
+
+        except Exception as e:
+            print(f"Error processing financial operations: {e}")
+            return HttpResponse('Failed to process financial operations.', status=500)
