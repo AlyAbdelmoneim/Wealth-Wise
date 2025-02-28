@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import TutorialQuestions from "./pages/TutorialQuestions";
+import Chatbot from "./pages/Chatbot";
+
 
 
 const App = () => {
@@ -15,6 +17,7 @@ const App = () => {
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/tutorial" element={isAuthenticated ? <TutorialQuestions /> : <Navigate to="/login" />} />
+                <Route path="/chatbot" element={<Chatbot />} />
                 <Route path="*" element={<Navigate to="/" />} />
             </Routes>
         </Router>
