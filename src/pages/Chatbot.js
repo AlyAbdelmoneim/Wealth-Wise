@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Chatbot.css";
-import SettingsPopup from "./SettingsPopup"; // Linking the settings pop-up
+import SettingsPopup from "./SettingsPopup";
+import { getAuth } from "firebase/auth";
+import { useNavigate } from "react-router-dom"; // ✅ Import useNavigate
 
 const Chatbot = () => {
     const [chats, setChats] = useState({});
@@ -8,14 +10,24 @@ const Chatbot = () => {
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
     const chatEndRef = useRef(null);
 
+    const navigate = useNavigate(); // ✅ Initialize the navigate function
+
     useEffect(() => {
+        const auth = getAuth();
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            setCurrentUser(user);
+        });
+
         const savedChats = JSON.parse(localStorage.getItem("chats")) || {};
         setChats(savedChats);
         if (Object.keys(savedChats).length > 0) {
             setCurrentChatId(Object.keys(savedChats)[0]);
         }
+
+        return () => unsubscribe();
     }, []);
 
     useEffect(() => {
@@ -25,7 +37,7 @@ const Chatbot = () => {
     }, [chats, currentChatId]);
 
     const handleSend = () => {
-        if (!input.trim()) return;
+        if (!input.trim() || !currentUser) return;
 
         const userMessage = { sender: "user", text: input };
         
@@ -42,7 +54,7 @@ const Chatbot = () => {
                 "Content-Type": "application/x-www-form-urlencoded",
             },
             body: new URLSearchParams({
-                user_email: "kareem.elfeel@gmail.com", // Replace with actual user email
+                user_email: currentUser.uid, 
                 message: input,
             }),
         })
@@ -94,6 +106,7 @@ const Chatbot = () => {
                 <button className="sidebar-btn" onClick={startNewChat}>+ New Chat</button>
                 <button className="sidebar-btn">📊 Analytics</button>
                 <button className="sidebar-btn" onClick={() => setIsSettingsOpen(true)}>⚙ Settings</button>
+                <button className="sidebar-btn" onClick={() => navigate("/update-data")}>Update Data</button>
                 <div className="chat-list">
                     {Object.keys(chats).map(chatId => (
                         <div key={chatId} className={`chat-item ${chatId === currentChatId ? "active" : ""}`} onClick={() => setCurrentChatId(chatId)}>

@@ -6,6 +6,7 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import TutorialQuestions from "./pages/TutorialQuestions";
 import Chatbot from "./pages/Chatbot";
+import UpdateData from "./pages/UpdateData";
 
 const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -34,6 +35,7 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/tutorial" element={isAuthenticated ? <TutorialQuestions /> : <Navigate to="/login" />} />
                 <Route path="/chatbot" element={isAuthenticated ? <Chatbot /> : <Navigate to="/login" />} />
+                <Route path="/update-data" element={isAuthenticated ? <UpdateData /> : <Navigate to="/login" />} />
                 <Route path="*" element={<Navigate to="/" />} />
             </Routes>
         </Router>
