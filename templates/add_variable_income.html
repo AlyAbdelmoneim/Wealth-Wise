@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Variable Income</title>
+</head>
+<body>
+    <h1>Add Variable Income</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="email" name="user_email" placeholder="User Email" required><br>
+        <input type="text" name="description" placeholder="Income Description" required><br>
+        <input type="text" name="customer_phone" placeholder="Customer Phone Number"><br>
+        <input type="number" name="amount" placeholder="Amount" required><br>
+        <button type="submit">Add Variable Income</button>
+    </form>
+</body>
+</html>
