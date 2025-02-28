@@ -1,4 +1,6 @@
 # AI_Hackathon/views.py
+import uuid
+
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views import View
@@ -173,3 +175,180 @@ class LinkedDataView(View):
             except Exception as e:
                 print(f"Error fetching linked data: {e}")
                 return HttpResponse('Failed to fetch linked data.', status=500)
+
+# Class-based view to create a link between two users
+class LinkUsersView(View):
+    def get(self, request):
+        return render(request, 'link_users.html')
+
+    def post(self, request):
+        email1 = request.POST.get('email1')
+        password1 = request.POST.get('password1')
+        email2 = request.POST.get('email2')
+        password2 = request.POST.get('password2')
+        link_password = request.POST.get('link_password')
+
+        if email1 and password1 and email2 and password2 and link_password:
+            try:
+                # Generate a unique link ID
+                link_id = str(uuid.uuid4())
+
+                # Fetch user data from Firebase
+                user1_doc = db.collection('users').document(email1).get()
+                user2_doc = db.collection('users').document(email2).get()
+
+                if user1_doc.exists and user2_doc.exists:
+                    user1_data = user1_doc.to_dict()
+                    user2_data = user2_doc.to_dict()
+
+                    # Calculate combined financials
+                    combined_networth = user1_data.get('networth', 0.0) + user2_data.get('networth', 0.0)
+                    combined_savings = user1_data.get('savings', 0.0) + user2_data.get('savings', 0.0)
+
+                    # Prepare linked users data
+                    linked_data = {
+                        'email1': email1,
+                        'password1': password1,  # For security, consider hashing
+                        'email2': email2,
+                        'password2': password2,
+                        'link_id': link_id,
+                        'link_password': link_password,  # Hash for security
+                        'combined_networth': combined_networth,
+                        'combined_savings': combined_savings,
+                        'created_at': datetime.utcnow().isoformat()
+                    }
+
+                    # Save the linked users data to Firebase
+                    db.collection('linked_users').document(link_id).set(linked_data)
+                    return HttpResponse('Users linked successfully!')
+
+                else:
+                    return HttpResponse('One or both users do not exist in the database.', status=404)
+
+            except Exception as e:
+                print(f"Error linking users: {e}")
+                return HttpResponse('Failed to link users.', status=500)
+
+        return render(request, 'link_users.html')
+
+# Function to update combined financials when user data changes
+def update_combined_financials(user_email):
+    try:
+        # Fetch all linked records where the user is involved
+        linked_users_ref = db.collection('linked_users')
+        linked_docs = linked_users_ref.where('email1', '==', user_email).stream()
+        linked_docs = list(linked_docs) + list(linked_users_ref.where('email2', '==', user_email).stream())
+
+        for doc in linked_docs:
+            linked_data = doc.to_dict()
+            email1 = linked_data['email1']
+            email2 = linked_data['email2']
+
+            # Fetch updated user data
+            user1_data = db.collection('users').document(email1).get().to_dict() or {}
+            user2_data = db.collection('users').document(email2).get().to_dict() or {}
+
+            # Recalculate combined financials
+            combined_networth = user1_data.get('networth', 0.0) + user2_data.get('networth', 0.0)
+            combined_savings = user1_data.get('savings', 0.0) + user2_data.get('savings', 0.0)
+
+            # Update linked user document with new combined values
+            db.collection('linked_users').document(doc.id).update({
+                'combined_networth': combined_networth,
+                'combined_savings': combined_savings,
+                'updated_at': datetime.utcnow().isoformat()
+            })
+
+    except Exception as e:
+        print(f"Error updating combined financials: {e}")
+class LinkUsersView(View):
+    def get(self, request):
+        return render(request, 'link_users.html')
+
+    def post(self, request):
+        email1 = request.POST.get('email1')
+        password1 = request.POST.get('password1')
+        email2 = request.POST.get('email2')
+        password2 = request.POST.get('password2')
+        link_password = request.POST.get('link_password')
+
+        if email1 and password1 and email2 and password2 and link_password:
+            try:
+                link_id = str(uuid.uuid4())
+                linked_data = {
+                    'email1': email1,
+                    'password1': password1,
+                    'email2': email2,
+                    'password2': password2,
+                    'link_id': link_id,
+                    'link_password': link_password,
+                    'created_at': datetime.utcnow().isoformat()
+                }
+                db.collection('linked_users').document(link_id).set(linked_data)
+                return HttpResponse('Users linked successfully!')
+
+            except Exception as e:
+                print(f"Error linking users: {e}")
+                return HttpResponse('Failed to link users.', status=500)
+class AddFixedIncomeView(View):
+    def get(self, request):
+        return render(request, 'add_fixed_income.html')
+
+    def post(self, request):
+        user_email = request.POST.get('user_email')
+        job_description = request.POST.get('job_description')
+        monthly_salary = request.POST.get('monthly_salary')
+        yearly_bonus = request.POST.get('yearly_bonus')
+
+        if user_email and job_description and monthly_salary:
+            try:
+                income_id = f"{user_email}_fixed_{uuid.uuid4()}"
+
+                fixed_income_data = {
+                    'user_email': user_email,
+                    'job_description': job_description,
+                    'monthly_salary': float(monthly_salary) if monthly_salary else 0.0,
+                    'yearly_bonus': float(yearly_bonus) if yearly_bonus else 0.0,
+                    'created_at': datetime.utcnow().isoformat()
+                }
+
+                db.collection('fixed_income').document(income_id).set(fixed_income_data)
+                return HttpResponse('Fixed income added successfully!')
+
+            except Exception as e:
+                print(f"Error saving fixed income to Firebase: {e}")
+                return HttpResponse('Failed to save fixed income data.', status=500)
+
+        return render(request, 'add_fixed_income.html')
+
+# 📂 Class-based view to manage Variable Income
+class AddVariableIncomeView(View):
+    def get(self, request):
+        return render(request, 'add_variable_income.html')
+
+    def post(self, request):
+        user_email = request.POST.get('user_email')
+        description = request.POST.get('description')
+        customer_phone = request.POST.get('customer_phone')
+        amount = request.POST.get('amount')
+
+        if user_email and description and amount:
+            try:
+                income_id = f"{user_email}_variable_{uuid.uuid4()}"
+
+                variable_income_data = {
+                    'user_email': user_email,
+                    'description': description,
+                    'customer_phone': customer_phone,
+                    'amount': float(amount) if amount else 0.0,
+                    'created_at': datetime.utcnow().isoformat()
+                }
+
+                db.collection('variable_income').document(income_id).set(variable_income_data)
+                return HttpResponse('Variable income added successfully!')
+
+            except Exception as e:
+                print(f"Error saving variable income to Firebase: {e}")
+                return HttpResponse('Failed to save variable income data.', status=500)
+
+        return render(request, 'add_variable_income.html')
