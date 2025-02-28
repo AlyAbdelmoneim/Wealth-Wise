@@ -26,7 +26,16 @@ const Chatbot = () => {
 
     const handleSend = () => {
         if (!input.trim()) return;
-    
+
+        const userMessage = { sender: "user", text: input };
+        
+        setChats(prev => ({
+            ...prev,
+            [currentChatId]: [...(prev[currentChatId] || []), userMessage]
+        }));
+
+        setIsTyping(true);
+
         fetch("http://localhost:8000/chatbot-api/", {
             method: "POST",
             headers: {
@@ -44,12 +53,15 @@ const Chatbot = () => {
                     ...prev,
                     [currentChatId]: [...(prev[currentChatId] || []), botMessage]
                 }));
+                setIsTyping(false);
             })
-            .catch((error) => console.error("Error:", error));
-    
+            .catch((error) => {
+                console.error("Error:", error);
+                setIsTyping(false);
+            });
+
         setInput("");
     };
-
 
     const startNewChat = () => {
         const newChatId = Date.now().toString();
