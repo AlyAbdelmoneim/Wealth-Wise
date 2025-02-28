@@ -352,3 +352,95 @@ class AddVariableIncomeView(View):
                 return HttpResponse('Failed to save variable income data.', status=500)
 
         return render(request, 'add_variable_income.html')
+
+class AddWorkExpenseView(View):
+    def get(self, request):
+        return render(request, 'add_work_expense.html')
+
+    def post(self, request):
+        user_email = request.POST.get('user_email')
+        expense_type = request.POST.get('type')  # Yearly, Monthly, One-Time
+        amount = request.POST.get('amount')
+        description = request.POST.get('description')
+        transaction_date = request.POST.get('transaction_date')
+
+        if user_email and expense_type and amount:
+            try:
+                expense_id = f"{user_email}_work_{uuid.uuid4()}"
+                work_expense_data = {
+                    'user_email': user_email,
+                    'type': expense_type,
+                    'amount': float(amount) if amount else 0.0,
+                    'description': description,
+                    'transaction_date': transaction_date or datetime.utcnow().isoformat()
+                }
+                db.collection('work_expenses').document(expense_id).set(work_expense_data)
+                return HttpResponse('Work expense added successfully!')
+
+            except Exception as e:
+                print(f"Error saving work expense to Firebase: {e}")
+                return HttpResponse('Failed to save work expense data.', status=500)
+
+        return render(request, 'add_work_expense.html')
+
+# 🛍️ Class-based view to manage Luxury Expenses
+class AddLuxuryExpenseView(View):
+    def get(self, request):
+        return render(request, 'add_luxury_expense.html')
+
+    def post(self, request):
+        user_email = request.POST.get('user_email')
+        expense_type = request.POST.get('type')  # Monthly, Yearly
+        amount = request.POST.get('amount')
+        description = request.POST.get('description')
+        transaction_date = request.POST.get('transaction_date')
+
+        if user_email and expense_type and amount:
+            try:
+                expense_id = f"{user_email}_luxury_{uuid.uuid4()}"
+                luxury_expense_data = {
+                    'user_email': user_email,
+                    'type': expense_type,
+                    'amount': float(amount) if amount else 0.0,
+                    'description': description,
+                    'transaction_date': transaction_date or datetime.utcnow().isoformat()
+                }
+                db.collection('luxury_expenses').document(expense_id).set(luxury_expense_data)
+                return HttpResponse('Luxury expense added successfully!')
+
+            except Exception as e:
+                print(f"Error saving luxury expense to Firebase: {e}")
+                return HttpResponse('Failed to save luxury expense data.', status=500)
+
+        return render(request, 'add_luxury_expense.html')
+
+# 🏠 Class-based view to manage Living Expenses
+class AddLivingExpenseView(View):
+    def get(self, request):
+        return render(request, 'add_living_expense.html')
+
+    def post(self, request):
+        user_email = request.POST.get('user_email')
+        expense_type = request.POST.get('type')  # Weekly, Monthly, Yearly
+        amount = request.POST.get('amount')
+        description = request.POST.get('description')
+        transaction_date = request.POST.get('transaction_date')
+
+        if user_email and expense_type and amount:
+            try:
+                expense_id = f"{user_email}_living_{uuid.uuid4()}"
+                living_expense_data = {
+                    'user_email': user_email,
+                    'type': expense_type,
+                    'amount': float(amount) if amount else 0.0,
+                    'description': description,
+                    'transaction_date': transaction_date or datetime.utcnow().isoformat()
+                }
+                db.collection('living_expenses').document(expense_id).set(living_expense_data)
+                return HttpResponse('Living expense added successfully!')
+
+            except Exception as e:
+                print(f"Error saving living expense to Firebase: {e}")
+                return HttpResponse('Failed to save living expense data.', status=500)
+
+        return render(request, 'add_living_expense.html')
