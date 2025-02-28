@@ -8,6 +8,7 @@ from .views import HomeView, AddUserView, AddTransactionView, FinancialDataView,
     LinkUsersView, AddFixedIncomeView, AddVariableIncomeView, AddWorkExpenseView, AddLuxuryExpenseView, \
     AddLivingExpenseView, FinancialOperationsView
 from .views import LinkedDataView
+from .views import ChatbotAPI
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -17,9 +18,9 @@ urlpatterns = [
     path('api/financial-data/', FinancialDataView.as_view(), name='financial_data'),
     path('display-data/', DisplayDataView.as_view(), name='display_data'),
 
-    path("api/", include("llm_chatbot.urls")),
-    path('ml/', include('ml_model.urls')),
-    path("chat/", " chat_with_palm"),
+    # path("api/", include("llm_chatbot.urls")),
+    # path('ml/', include('ml_model.urls')),
+    # path("chat/", " chat_with_palm"),
 
     # path("api/", include("llm_chatbot.urls")),
     # path('ml/', include('ml_model.urls')),
@@ -34,5 +35,6 @@ urlpatterns = [
     path('add-living-expense/', AddLivingExpenseView.as_view(), name='add_living_expense'),
     path('financial-operations/', FinancialOperationsView.as_view(), name='financial_operations'),
     path('logout/', logout, name='logout'),
+    path('chatbot-api/', ChatbotAPI.as_view(), name='chatbot_api'),
 
 ]
