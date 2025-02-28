@@ -1,13 +1,25 @@
 # AI_Hackathon/views.py
 import uuid
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from firebase_admin import firestore
 from datetime import datetime, timedelta
+from datetime import datetime
+from rest_framework.decorators import api_view
+import google.generativeai as genai
 
 db = firestore.client()
+
+genai.configure(api_key="AIzaSyBZFbmzifh7zWSiXZsznz4_YhUoOv8QNFY")
+model = genai.GenerativeModel("gemini-1.5-pro-latest")
+
+@api_view(["POST"])
+def chat_with_palm(request):
+    user_message = request.data.get("message", "")
+    response = model.generate_content(user_message)
+    return JsonResponse({"response": response.text})
 
 # Class-based view for the home page and test data management
 class HomeView(View):
