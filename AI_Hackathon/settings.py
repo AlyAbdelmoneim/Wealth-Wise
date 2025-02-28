@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 import firebase_admin
 from firebase_admin import credentials, firestore
 
@@ -107,3 +108,7 @@ cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
 
 db = firestore.client()
+
+# Cloud Run Specific Settings
+PORT = int(os.environ.get("PORT", 8080))
+ALLOWED_HOSTS = ["*"]

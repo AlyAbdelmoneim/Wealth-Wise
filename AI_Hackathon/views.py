@@ -3,8 +3,19 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from firebase_admin import firestore
+from rest_framework.decorators import api_view
+import google.generativeai as genai
 
 db = firestore.client()
+
+genai.configure(api_key="AIzaSyBZFbmzifh7zWSiXZsznz4_YhUoOv8QNFY")
+model = genai.GenerativeModel("gemini-1.5-pro-latest")
+
+@api_view(["POST"])
+def chat_with_palm(request):
+    user_message = request.data.get("message", "")
+    response = model.generate_content(user_message)
+    return JsonResponse({"response": response.text})
 
 # Class-based view for the home page and test data management
 class HomeView(View):
@@ -101,3 +112,7 @@ class DisplayDataView(View):
         docs = users_ref.stream()
         data = [doc.to_dict().get('data') for doc in docs]
         return render(request, 'home.html', {'data': data})
+
+# Test the Gemini API integration
+response = model.generate_content("Hello! How are you?")
+print(response.text)

@@ -1,7 +1,7 @@
 # AI_Hackathon/urls.py
 from django.contrib import admin
 from django.urls import path, include
-from .views import HomeView, AddUserView, AddTransactionView, FinancialDataView, DisplayDataView
+from .views import HomeView, AddUserView, AddTransactionView, FinancialDataView, DisplayDataView, chat_with_palm
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -13,4 +13,5 @@ urlpatterns = [
 
     path("api/", include("llm_chatbot.urls")),
     path('ml/', include('ml_model.urls')),
+    path("chat/", " chat_with_palm"),
 ]
