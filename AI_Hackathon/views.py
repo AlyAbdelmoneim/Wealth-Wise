@@ -1,22 +1,15 @@
-# AI_Hackathon/views.py
 import uuid
-
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
+import json
+from django.shortcuts import render, redirect
+from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.views import View
 from firebase_admin import firestore
 from datetime import datetime, timedelta
-from datetime import datetime
 from rest_framework.decorators import api_view
 import google.generativeai as genai
-from django.http import JsonResponse, HttpResponseBadRequest
-from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from firebase_admin import firestore
 import requests
-import json
-from datetime import datetime, timedelta
 
 db = firestore.client()
 
@@ -81,6 +74,7 @@ class AddUserView(View):
 
         return render(request, 'add_user.html')
 
+
 # Class-based view to add financial transactions using email as the user reference
 class AddTransactionView(View):
     def get(self, request):
@@ -101,6 +95,7 @@ class AddTransactionView(View):
                     'amount': float(amount),
                     'description': description,
                     'type': transaction_type,
+                    'created_at': datetime.utcnow().isoformat()  # Adding created_at timestamp
                 }
 
                 db.collection('transactions').document(transaction_id).set(transaction_data)
@@ -111,6 +106,7 @@ class AddTransactionView(View):
                 return HttpResponse('Failed to save transaction to Firebase')
 
         return render(request, 'add_transaction.html')
+
 
 # Class-based view to fetch financial data as JSON
 class FinancialDataView(View):
@@ -208,6 +204,24 @@ class FinancialDataView(View):
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+def get_financial_data(request):
+    if request.method == 'GET':
+        user_email = request.GET.get('user_email')  # Get user_email from query parameters
+
+        if not user_email:
+            return JsonResponse({"error": "user_email is required"}, status=400)
+
+        try:
+            # Generate financial data for the user
+            financial_view = FinancialDataView()
+            return financial_view.get(request)  # Use the existing method to get financial data
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "GET method required"}, status=405)
 
 
 # Class-based view to display data on the frontend
@@ -349,6 +363,7 @@ class LinkUsersView(View):
 
         return render(request, 'link_users.html')
 
+
 # Function to update combined financials when user data changes
 def update_combined_financials(user_email):
     try:
@@ -379,35 +394,6 @@ def update_combined_financials(user_email):
 
     except Exception as e:
         print(f"Error updating combined financials: {e}")
-class LinkUsersView(View):
-    def get(self, request):
-        return render(request, 'link_users.html')
-
-    def post(self, request):
-        email1 = request.POST.get('email1')
-        password1 = request.POST.get('password1')
-        email2 = request.POST.get('email2')
-        password2 = request.POST.get('password2')
-        link_password = request.POST.get('link_password')
-
-        if email1 and password1 and email2 and password2 and link_password:
-            try:
-                link_id = str(uuid.uuid4())
-                linked_data = {
-                    'email1': email1,
-                    'password1': password1,
-                    'email2': email2,
-                    'password2': password2,
-                    'link_id': link_id,
-                    'link_password': link_password,
-                    'created_at': datetime.utcnow().isoformat()
-                }
-                db.collection('linked_users').document(link_id).set(linked_data)
-                return HttpResponse('Users linked successfully!')
-
-            except Exception as e:
-                print(f"Error linking users: {e}")
-                return HttpResponse('Failed to link users.', status=500)
 
 
 class AddFixedIncomeView(View):
@@ -441,7 +427,8 @@ class AddFixedIncomeView(View):
 
         return render(request, 'add_fixed_income.html')
 
-# 📂 Class-based view to manage Variable Income
+
+# Class-based view to manage Variable Income
 class AddVariableIncomeView(View):
     def get(self, request):
         return render(request, 'add_variable_income.html')
@@ -472,6 +459,7 @@ class AddVariableIncomeView(View):
                 return HttpResponse('Failed to save variable income data.', status=500)
 
         return render(request, 'add_variable_income.html')
+
 
 class AddWorkExpenseView(View):
     def get(self, request):
@@ -504,7 +492,7 @@ class AddWorkExpenseView(View):
         return render(request, 'add_work_expense.html')
 
 
-# 🛍️ Class-based view to manage Luxury Expenses
+# Class-based view to manage Luxury Expenses
 class AddLuxuryExpenseView(View):
     def get(self, request):
         return render(request, 'add_luxury_expense.html')
@@ -536,7 +524,7 @@ class AddLuxuryExpenseView(View):
         return render(request, 'add_luxury_expense.html')
 
 
-# 🏠 Class-based view to manage Living Expenses
+# Class-based view to manage Living Expenses
 class AddLivingExpenseView(View):
     def get(self, request):
         return render(request, 'add_living_expense.html')
@@ -567,33 +555,6 @@ class AddLivingExpenseView(View):
 
         return render(request, 'add_living_expense.html')
 
-# AI_Hackathon/views.py
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
-from django.views import View
-from firebase_admin import firestore
-from datetime import datetime, timedelta
-
-db = firestore.client()
-
-# AI_Hackathon/views.py
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.views import View
-from firebase_admin import firestore
-from datetime import datetime, timedelta
-
-db = firestore.client()
-
-# AI_Hackathon/views.py
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.views import View
-from firebase_admin import firestore
-from datetime import datetime, timedelta
-
-db = firestore.client()
-
 
 class FinancialOperationsView(View):
     def get(self, request):
@@ -619,7 +580,7 @@ class FinancialOperationsView(View):
             cash_flow_data = {}
             tax_data = {}
 
-            # 📈 Income Calculation
+            # Income Calculation
             if action == 'calculate_income':
                 fixed_income_ref = db.collection('fixed_income').where('user_email', '==', user_email)
                 fixed_income_docs = fixed_income_ref.stream()
@@ -649,7 +610,7 @@ class FinancialOperationsView(View):
                     'month_income': total_income_one_month
                 }
 
-            # 💼 Profit and Loss Calculation
+            # Profit and Loss Calculation
             elif action == 'calculate_profit_loss':
                 fixed_income_ref = db.collection('fixed_income').where('user_email', '==', user_email)
                 fixed_income_docs = fixed_income_ref.stream()
@@ -696,7 +657,7 @@ class FinancialOperationsView(View):
                     'profit_and_loss': profit_and_loss
                 }
 
-            # 💰 Current Cash Flow
+            # Current Cash Flow
             elif action == 'calculate_cash_flow':
                 user_doc = db.collection('users').document(user_email).get()
                 if user_doc.exists:
@@ -711,7 +672,7 @@ class FinancialOperationsView(View):
                         'total_cash_flow': total_cash_flow
                     }
 
-            # 🧮 Taxation Calculation
+            # Taxation Calculation
             elif action == 'calculate_taxation':
                 fixed_income_ref = db.collection('fixed_income').where('user_email', '==', user_email)
                 fixed_income_docs = fixed_income_ref.stream()
@@ -775,78 +736,8 @@ class FinancialOperationsView(View):
             return HttpResponse('Failed to process financial operations.', status=500)
 
 
-class IncomeGraphView(View):
-    def get(self, request):
-        user_email = request.GET.get('user_email')
-
-        if not user_email:
-            return HttpResponse("User email is required!", status=400)
-
-        try:
-            # Fetch income data from Firestore
-            fixed_income_ref = db.collection('fixed_income').where('user_email', '==', user_email)
-            variable_income_ref = db.collection('variable_income').where('user_email', '==', user_email)
-
-            fixed_income_docs = fixed_income_ref.stream()
-            variable_income_docs = variable_income_ref.stream()
-
-            # Prepare data for the graph
-            fixed_income = sum([doc.to_dict().get('monthly_salary', 0.0) for doc in fixed_income_docs])
-            variable_income = sum([doc.to_dict().get('amount', 0.0) for doc in variable_income_docs])
-
-            # Create a bar chart
-            plt.figure(figsize=(6, 4))
-            categories = ['Fixed Income', 'Variable Income']
-            values = [fixed_income, variable_income]
-
-            plt.bar(categories, values, color=['blue', 'green'])
-            plt.xlabel('Income Type')
-            plt.ylabel('Amount')
-            plt.title('Income Distribution')
-
-            # Save plot to a PNG image in memory
-            buf = io.BytesIO()
-            plt.savefig(buf, format='png')
-            plt.close()
-            buf.seek(0)
-
-            # Encode image to base64
-            image_base64 = base64.b64encode(buf.read()).decode('utf-8')
-
-            return JsonResponse({'image': f'data:image/png;base64,{image_base64}'})
-
-        except Exception as e:
-            print(f"Error generating income graph: {e}")
-            return HttpResponse('Failed to generate income graph.', status=500)
-
-
-
-# from django.views.decorators.csrf import csrf_exempt
-#
-# from django.http import JsonResponse, HttpResponseBadRequest
-# from django.views import View
-# from django.views.decorators.csrf import csrf_exempt
-# from django.utils.decorators import method_decorator
-# from firebase_admin import firestore
-# import requests
-# import json
-#
-# db = firestore.client()
-#
-# from django.http import JsonResponse, HttpResponseBadRequest
-# from django.views import View
-# from django.views.decorators.csrf import csrf_exempt
-# from django.utils.decorators import method_decorator
-# from firebase_admin import firestore
-# import requests
-# import json
-#
-# db = firestore.client()
-
-
 @method_decorator(csrf_exempt, name='dispatch')
 class ChatbotAPI(View):
-
     def post(self, request):
         user_email = request.POST.get('user_email')
         user_message = request.POST.get('message')
@@ -880,21 +771,21 @@ class ChatbotAPI(View):
 
             # Create a context-rich prompt including user data
             context_prompt = f"""
-            User Profile:
-            - Name: {user_data.get('name', 'Unknown')}
-            - Country: {user_data.get('country', 'Unknown')}
-            - Currency: {user_data.get('currency', 'Unknown')}
-            - Savings: {user_data.get('savings', 'Unknown')}
-            - Net Worth: {user_data.get('netWorth', 'Unknown')}
-            - Age: {user_data.get('age', 'Unknown')}
-            - Job: {user_data.get('jobDescription', 'Unknown')} ({user_data.get('position', 'Unknown')})
-            - Risk Tolerance: {user_data.get('riskTolerance', 'Unknown')}
-            - Hobbies: {user_data.get('freeTime', 'Unknown')}
-            - Additional Info: {user_data.get('additionalInfo', 'Unknown')}
+                            User Profile:
+                            - Name: {user_data.get('name', 'Unknown')}
+                            - Country: {user_data.get('country', 'Unknown')}
+                            - Currency: {user_data.get('currency', 'Unknown')}
+                            - Savings: {user_data.get('savings', 'Unknown')}
+                            - Net Worth: {user_data.get('netWorth', 'Unknown')}
+                            - Age: {user_data.get('age', 'Unknown')}
+                            - Job: {user_data.get('jobDescription', 'Unknown')} ({user_data.get('position', 'Unknown')})
+                            - Risk Tolerance: {user_data.get('riskTolerance', 'Unknown')}
+                            - Hobbies: {user_data.get('freeTime', 'Unknown')}
+                            - Additional Info: {user_data.get('additionalInfo', 'Unknown')}
 
-            Based on this user profile, please provide a personalized response to:
-            {user_message}
-            """
+                            Based on this user profile, please provide a personalized response to:
+                            {user_message}
+                            """
 
             # Prepare the payload for Google Generative Language API
             payload = {

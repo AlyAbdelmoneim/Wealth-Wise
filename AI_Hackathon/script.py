@@ -100,3 +100,9 @@ def generate_json_data(user_email):
 user_email = "kareem.elfeel@gmail.com"
 json_data = generate_json_data(user_email)
 print(json_data)
+
+
+
+
+
+
