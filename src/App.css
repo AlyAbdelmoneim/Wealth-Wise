@@ -1,6 +1,16 @@
 .App {
   text-align: center;
 }
+body {
+  background-color: rgba(136, 109, 92, 0.8) !important;
+  color: rgba(89, 67, 52, 0.8);
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 .App-logo {
   height: 40vmin;
