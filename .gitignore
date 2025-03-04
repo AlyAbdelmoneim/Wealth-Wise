@@ -21,3 +21,10 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Ignore sensitive keys
+serviceAccountKey.json
+
+# Ignore IDE settings
+.idea/
+
