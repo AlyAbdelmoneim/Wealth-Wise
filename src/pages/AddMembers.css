@@ -1,0 +1,89 @@
+.add-members-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.video-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
+
+.content-overlay {
+    position: relative;
+    background: rgba(0, 0, 0, 0.7); /* Increase contrast */
+    padding: 20px;
+    border-radius: 10px;
+    color: #fff;
+    text-align: center;
+    width: 90%;
+    max-width: 500px;
+}
+
+h2 {
+    margin-bottom: 20px;
+}
+
+.members-list {
+    margin-bottom: 20px;
+    max-height: 200px; /* Prevents list from pushing input down */
+    overflow-y: auto; /* Makes list scrollable */
+}
+
+.member-item {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    font-size: 16px;
+    color: #fff; /* Ensure text is visible */
+}
+
+.add-member-section {
+    display: flex;
+    flex-direction: column; /* Stack input & button vertically */
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.add-member-input {
+    width: 94%; /* Ensure full width */
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid #fff;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    outline: none;
+    text-align: center; /* Center text inside input */
+    margin: 10px;
+}
+
+.add-member-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.add-member-btn {
+    width: 100%; /* Make button same width as input */
+    padding: 12px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.add-member-btn:hover {
+    background-color: #0056b3;
+}

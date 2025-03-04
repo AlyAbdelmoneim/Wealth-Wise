@@ -1,0 +1,66 @@
+/* src/pages/Analytics.css */
+
+.analytics-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+    position: relative;
+}
+
+.back-button {
+    position: absolute;
+    width: 100px;
+    top: 20px;
+    left: 20px;
+    background-color: rgba(189, 156, 138, 0.8); /* Blue Background */
+    color: white; /* White Text */
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease-in-out;
+    font-weight: bold;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.back-button:hover {
+    background-color: rgba(189, 156, 138, 0.8); /* Darker Blue on Hover */
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #333;
+}
+
+.chart-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.chart {
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+p {
+    text-align: center;
+    color: #777;
+    font-size: 1.2rem;
+}

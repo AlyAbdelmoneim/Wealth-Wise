@@ -1,0 +1,103 @@
+.video-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -1;
+}
+
+.tutorial-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full height */
+}
+
+.tutorial-form-container {
+    width: 450px; /* Adjust width as needed */
+    padding: 20px;
+    background: rgba(182, 163, 147, 0.9);
+    box-shadow: 0 0 15px rgba(189, 156, 138, 0.8);
+    border-radius: 10px;
+    text-align: center;
+}
+
+h2 {
+    text-align: center;
+    color: #6B4226;
+}
+
+input, select, textarea {
+    width: 90%; /* Make all inputs take full width */
+    padding: 10px;
+    margin-top: 8px;
+    border: 2px solid rgba(97, 82, 71, 0.8);
+    border-radius: 5px;
+    background: transparent;
+    font-size: 16px;
+}
+
+/* Currency Dropdown Styling */
+.currency-select {
+    width: 95%;
+    padding: 10px;
+    margin-top: 8px;
+    border: 2px solid rgba(97, 82, 71, 0.8);
+    border-radius: 5px;
+    background: transparent;
+    font-size: 16px;
+}
+
+.currency-select:hover {
+    border-color: #6B4226;
+    background: #EAE0C8;
+}
+
+.currency-select:focus {
+    outline: none;
+    border-color: #8B5E3C;
+}
+
+/* Risk Tolerance Dropdown Styling */
+.risk-select {
+    width: 95%;
+    padding: 10px;
+    margin-top: 8px;
+    border: 2px solid rgba(97, 82, 71, 0.8);
+    border-radius: 5px;
+    background: transparent;
+    font-size: 16px;
+}
+
+.risk-select:hover {
+    border-color: rgba(112, 78, 63, 0.9);
+    background: #FFDAB9;
+}
+
+.risk-select:focus {
+    outline: none;
+    border-color: #8e6868;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: rgba(152, 100, 76, 0.9);
+    background: rgba(205, 83, 17, 0.2);
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    background: #6B4226;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #8B5E3C;
+}
