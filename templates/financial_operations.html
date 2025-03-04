@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Financial Operations</title>
+</head>
+<body>
+    <h1>Financial Operations</h1>
+
+    <!-- If user email is not available, show input form -->
+    {% if not user_email %}
+        <form method="POST" action="/financial-operations/">
+            {% csrf_token %}
+            <input type="email" name="user_email" placeholder="Enter Your Email" required>
+            <button type="submit">Submit</button>
+        </form>
+    {% else %}
+        <p><strong>User:</strong> {{ user_email }}</p>
+
+        <!-- Action Buttons for Financial Operations -->
+        <form method="POST" action="/financial-operations/">
+            {% csrf_token %}
+            <button type="submit" name="action" value="calculate_income">Calculate Income</button>
+            <button type="submit" name="action" value="calculate_profit_loss">Calculate Profit and Loss</button>
+            <button type="submit" name="action" value="calculate_cash_flow">Current Cash Flow</button>
+            <button type="submit" name="action" value="calculate_taxation">Calculate Taxation</button>
+
+            <!-- Tax Deduction Checkbox -->
+            <label>
+                <input type="checkbox" name="apply_tax_deduction" value="yes">
+                Apply Tax Deduction to Net Worth
+            </label>
+        </form>
+
+        <!-- Logout Button to Clear Session -->
+        <form method="GET" action="/logout/">
+            <button type="submit">Logout</button>
+        </form>
+    {% endif %}
+
+    <!-- 📈 Income Data Display -->
+    {% if income_data %}
+        <h2>📊 Income Results:</h2>
+        <p><strong>1 Year Income:</strong> {{ income_data.year_income }}</p>
+        <p><strong>3 Months Income:</strong> {{ income_data.three_months_income }}</p>
+        <p><strong>1 Month Income:</strong> {{ income_data.month_income }}</p>
+    {% endif %}
+
+    <!-- 💼 Profit and Loss Data Display -->
+    {% if profit_data %}
+        <h2>💼 Profit and Loss:</h2>
+        <p><strong>Monthly Income:</strong> {{ profit_data.monthly_income }}</p>
+        <p><strong>Variable Income (Last Month):</strong> {{ profit_data.variable_income_last_month }}</p>
+        <p><strong>Work Expenses (Last Month):</strong> {{ profit_data.work_expense_last_month }}</p>
+        <h3>📈 <strong>Profit and Loss:</strong> {{ profit_data.profit_and_loss }}</h3>
+    {% endif %}
+
+    <!-- 💰 Current Cash Flow Display -->
+    {% if cash_flow_data %}
+        <h2>💰 Current Cash Flow:</h2>
+        <p><strong>Savings:</strong> {{ cash_flow_data.savings }}</p>
+        <p><strong>Net Worth:</strong> {{ cash_flow_data.networth }}</p>
+        <h3>🏦 <strong>Total Cash Flow:</strong> {{ cash_flow_data.total_cash_flow }}</h3>
+    {% endif %}
+
+    <!-- 🧮 Taxation Data Display -->
+    {% if tax_data %}
+        <h2>🧮 Taxation Details:</h2>
+        <p><strong>Monthly Salary:</strong> {{ tax_data.monthly_salary }}</p>
+        <p><strong>Variable Income (Last Month):</strong> {{ tax_data.variable_income }}</p>
+        <p><strong>Total Income:</strong> {{ tax_data.total_income }}</p>
+        <p><strong>Applicable Tax Rate:</strong> {{ tax_data.tax_rate }}%</p>
+    {% endif %}
+
+</body>
+</html>

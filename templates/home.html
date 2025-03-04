@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home Page - FinSavvy</title>
+</head>
+<body>
+<h1>Test Data Management</h1>
+<form method="POST">
+    {% csrf_token %}
+    <input type="text" name="test_data" placeholder="Enter test data" required>
+    <button type="submit">Submit Test Data</button>
+</form>
+
+<h2>Display All Data</h2>
+<form method="GET" action="/display-data/">
+    <button type="submit">Display All Data</button>
+</form>
+
+{% if data %}
+    <h3>Data from Firebase:</h3>
+    <ul>
+        {% for item in data %}
+            <li>{{ item }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+</body>
+</html>
